@@ -1,83 +1,111 @@
-function formatCurrency(amount) {
-  return new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency: 'USD'
-  }).format(amount);
-}
-
-function calculateDebtToIncomeRatio(monthlyIncome, debtAmount) {
-  return (debtAmount / (monthlyIncome * 12)) * 100;
-}
-
-export function calculateReport(formData) {
-  const {
-    fullName,
-    monthlyIncome,
-    monthlyExpenses,
-    dependents,
-    hasDebt,
-    debtAmount,
-    financialGoal
-  } = formData;
-
-  const income = parseFloat(monthlyIncome);
-  const expenses = parseFloat(monthlyExpenses);
+/**
+ * Calculates financial insights based on user data
+ * @param {Object} data - The user's financial data
+ * @returns {String} - A formatted report with financial insights
+ */
+function calculateReport(data) {
+  const { name, income, expenses, dependents, debt, debtAmount, financialGoal } = data;
+  
+  // Calculate disposable income
   const disposableIncome = income - expenses;
-  const annualDisposableIncome = disposableIncome * 12;
-  const insights = [];
-
-  // Basic financial health insights
-  insights.push(`Monthly Disposable Income: ${formatCurrency(disposableIncome)}`);
-  insights.push(`Annual Disposable Income: ${formatCurrency(annualDisposableIncome)}`);
-
-  // Expense ratio insight
-  const expenseRatio = (expenses / income) * 100;
-  insights.push(`Your expense-to-income ratio is ${expenseRatio.toFixed(1)}% ${
-    expenseRatio > 70 ? '(Consider reducing expenses)' :
-    expenseRatio < 50 ? '(Great job keeping expenses low!)' :
-    '(Within reasonable range)'
-  }`);
-
-  // Debt-specific insights
-  if (hasDebt === 'yes') {
-    const debtToIncomeRatio = calculateDebtToIncomeRatio(income, parseFloat(debtAmount));
-    insights.push(`Debt-to-Income Ratio: ${debtToIncomeRatio.toFixed(1)}% ${
-      debtToIncomeRatio > 43 ? '(This is high - consider debt consolidation)' :
-      debtToIncomeRatio > 30 ? '(This is moderate - focus on debt reduction)' :
-      '(This is manageable)'
-    }`);
+  const disposableIncomePercentage = ((disposableIncome / income) * 100).toFixed(1);
+  
+  // Calculate debt-to-income ratio if debt is reported
+  let debtToIncomeRatio = 0;
+  if (debt === 'Yes' && debtAmount > 0) {
+    debtToIncomeRatio = ((debtAmount / (income * 12)) * 100).toFixed(1);
   }
-
+  
+  // Calculate dependent impact
+  const expensesPerDependent = dependents > 0 ? (expenses / dependents).toFixed(2) : 0;
+  
+  // Build report
+  let report = `FINANCIAL REPORT FOR ${name.toUpperCase()}\n\n`;
+  
+  // Basic financial metrics
+  report += `Monthly Income: $${income.toLocaleString()}\n`;
+  report += `Monthly Expenses: $${expenses.toLocaleString()}\n`;
+  report += `Disposable Income: $${disposableIncome.toLocaleString()} (${disposableIncomePercentage}% of income)\n`;
+  report += `Number of Dependents: ${dependents}\n`;
+  if (dependents > 0) {
+    report += `Average Expense per Dependent: $${expensesPerDependent}\n`;
+  }
+  
+  if (debt === 'Yes') {
+    report += `Total Debt: $${debtAmount.toLocaleString()}\n`;
+    report += `Debt-to-Annual Income Ratio: ${debtToIncomeRatio}%\n`;
+  }
+  
+  report += `\nPrimary Financial Goal: ${financialGoal}\n\n`;
+  
+  // General insights
+  report += `KEY INSIGHTS:\n`;
+  
+  // Saving rate insights
+  if (disposableIncome <= 0) {
+    report += `• ALERT: Your expenses exceed your income. This is unsustainable long-term.\n`;
+    report += `• RECOMMENDATION: Review your budget to reduce expenses or find ways to increase income.\n`;
+  } else if (disposableIncomePercentage < 20) {
+    report += `• Your saving rate (${disposableIncomePercentage}%) is below the recommended 20%.\n`;
+    report += `• RECOMMENDATION: Consider finding ways to reduce expenses or increase income.\n`;
+  } else {
+    report += `• POSITIVE: Your saving rate of ${disposableIncomePercentage}% is healthy!\n`;
+  }
+  
   // Goal-specific insights
-  switch (financialGoal) {
+  switch(financialGoal) {
     case 'Save for a house':
-      const recommendedDownPayment = income * 12 * 3; // 3x annual income
-      insights.push(`For a house down payment, aim to save ${formatCurrency(recommendedDownPayment)}. At your current rate, you could save this in ${Math.ceil(recommendedDownPayment / annualDisposableIncome)} years with current disposable income.`);
+      report += `• For home buying: With your current savings rate, you're saving $${disposableIncome.toLocaleString()} monthly.\n`;
+      if (debt === 'Yes' && debtToIncomeRatio > 36) {
+        report += `• Your debt-to-income ratio (${debtToIncomeRatio}%) may affect mortgage approval. Lenders typically prefer ratios below 36%.\n`;
+      }
+      report += `• RECOMMENDATION: Consider setting aside at least 20% of your home's purchase price for a down payment.\n`;
       break;
-
+      
     case 'Pay off debt':
-      if (hasDebt === 'yes') {
-        const monthsToPayoff = parseFloat(debtAmount) / disposableIncome;
-        insights.push(`At your current disposable income rate, you could pay off your debt in approximately ${Math.ceil(monthsToPayoff)} months if you commit all excess funds to debt repayment.`);
+      if (debt === 'Yes') {
+        const monthsToPayDebt = debtAmount / disposableIncome;
+        report += `• At your current rate, it would take approximately ${monthsToPayDebt.toFixed(1)} months to pay off your debt.\n`;
+        report += `• RECOMMENDATION: Consider the debt snowball or avalanche method to accelerate your debt payoff.\n`;
+      } else {
+        report += `• You've indicated no debt - congratulations! Consider redirecting your planned debt payments to savings.\n`;
       }
       break;
-
+      
     case 'Emergency fund':
       const recommendedEmergencyFund = expenses * 6;
-      insights.push(`Aim for an emergency fund of ${formatCurrency(recommendedEmergencyFund)} (6 months of expenses). You could achieve this in ${Math.ceil(recommendedEmergencyFund / disposableIncome)} months with current disposable income.`);
+      report += `• A recommended emergency fund should cover 3-6 months of expenses ($${(expenses * 3).toLocaleString()} to $${recommendedEmergencyFund.toLocaleString()}).\n`;
+      report += `• At your current saving rate, it would take approximately ${(recommendedEmergencyFund / disposableIncome).toFixed(1)} months to build a 6-month emergency fund.\n`;
       break;
-
+      
     case 'Retire early':
-      const retirementGoal = income * 12 * 25; // 25x annual income
-      insights.push(`For early retirement, aim for a nest egg of ${formatCurrency(retirementGoal)}. Consider maximizing tax-advantaged retirement accounts and investing in a diversified portfolio.`);
+      report += `• For early retirement, the general guideline is to save 25-30 times your annual expenses.\n`;
+      const retirementTarget = expenses * 12 * 25;
+      report += `• Based on your current expenses, you'd need approximately $${retirementTarget.toLocaleString()} saved.\n`;
+      if (disposableIncome > 0) {
+        const yearsToRetirement = (retirementTarget / (disposableIncome * 12)).toFixed(1);
+        report += `• At your current saving rate, it would take approximately ${yearsToRetirement} years to reach this goal (not accounting for investment growth).\n`;
+      }
       break;
   }
-
-  // Dependent-specific insight
-  if (parseInt(dependents) > 0) {
-    const recommendedLifeInsurance = income * 12 * 10;
-    insights.push(`With ${dependents} dependent${dependents > 1 ? 's' : ''}, consider life insurance coverage of ${formatCurrency(recommendedLifeInsurance)} (10x annual income).`);
+  
+  // Final recommendations
+  report += `\nRECOMMENDATIONS:\n`;
+  
+  if (disposableIncome <= 0) {
+    report += `• Immediate action: Find ways to reduce expenses or increase income.\n`;
+  } else {
+    report += `• Consider the 50/30/20 budget rule: 50% for needs, 30% for wants, and 20% for savings/debt.\n`;
   }
+  
+  if (debt === 'Yes' && debtToIncomeRatio > 20) {
+    report += `• Prioritize debt reduction to improve financial stability.\n`;
+  }
+  
+  report += `• Regularly review and adjust your budget as your financial situation changes.\n`;
+  report += `• Consider consulting with a financial advisor for personalized advice.\n`;
+  
+  return report;
+}
 
-  return insights.join('\n\n');
-} 
+export default calculateReport; 
