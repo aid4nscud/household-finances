@@ -27,10 +27,8 @@ export function createClient() {
         flowType: 'pkce',
         persistSession: true,
         detectSessionInUrl: true,
-        autoRefreshToken: true,
-        // Use cookies for session persistence as recommended by Supabase
+        autoRefreshToken: true
       },
-      // Custom debug logger
       global: {
         headers: {
           'x-client-id': clientId

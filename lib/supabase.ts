@@ -1,4 +1,6 @@
-import { createClient } from '@supabase/supabase-js'
+import { createClient as createServiceSupabaseClient } from '@supabase/supabase-js'
+import { createClient as createServerClient } from '@/utils/supabase/server'
+import { createClient as createBrowserClient } from '@/utils/supabase/client'
 import { SESSION_EXPIRY } from './constants'
 
 // Check if Supabase URL and anon key are available
@@ -13,26 +15,14 @@ if (!supabaseUrl || !supabaseAnonKey) {
 
 console.log(`[Supabase] Creating client with URL: ${supabaseUrl}`)
 
-// Create a single supabase client for interacting with the database
-export const supabase = createClient(
-  supabaseUrl as string, 
-  supabaseAnonKey as string,
-  {
-    auth: {
-      persistSession: true,
-      autoRefreshToken: true,
-      detectSessionInUrl: true,
-      // Disable debug mode in production to prevent excessive logging
-      debug: false,
-      flowType: 'pkce'
-    },
-    global: {
-      headers: {
-        'x-application-name': 'household-finances',
-      },
-    }
-  }
-)
+// Export the modern client creators
+export const createClient = createBrowserClient
+export const createServerSupabaseClient = createServerClient
+
+/**
+ * @deprecated Use createClient() from utils/supabase/client.ts instead
+ */
+export const supabase = createBrowserClient()
 
 // Log client creation
 console.log('[Supabase] Client created successfully')
@@ -55,7 +45,7 @@ export function createServiceClient() {
     throw new Error('Missing Supabase environment variables')
   }
   
-  return createClient(supabaseUrl, supabaseServiceKey, {
+  return createServiceSupabaseClient(supabaseUrl, supabaseServiceKey, {
     auth: {
       autoRefreshToken: false,
       persistSession: false

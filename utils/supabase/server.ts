@@ -29,12 +29,9 @@ export const createClient = () => {
       },
       cookies: {
         get(name: string) {
-          const cookie = cookieStore.get(name)
-          console.log(`[Server] Getting cookie: ${name}, exists: ${!!cookie}`)
-          return cookie?.value
+          return cookieStore.get(name)?.value
         },
         set(name: string, value: string, options: Record<string, any>) {
-          console.log(`[Server] Setting cookie: ${name}`)
           try {
             cookieStore.set({ 
               name, 
@@ -43,14 +40,13 @@ export const createClient = () => {
               path: '/',
               sameSite: 'lax',
               secure: process.env.NODE_ENV === 'production',
-              httpOnly: false
+              httpOnly: true
             })
           } catch (error) {
             console.error('[Server] Error setting cookie:', error);
           }
         },
         remove(name: string, options: Record<string, any>) {
-          console.log(`[Server] Removing cookie: ${name}`)
           try {
             cookieStore.set({ 
               name, 

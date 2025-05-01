@@ -9,17 +9,6 @@ const nextConfig = {
     // Keep console logs in production for debugging
     removeConsole: false,
   },
-  logging: {
-    fetches: {
-      fullUrl: true,
-    },
-  },
-  experimental: {
-    serverComponentsExternalPackages: [],
-    serverActions: {
-      bodySizeLimit: '2mb',
-    },
-  },
   // Enable console output in production for debug purposes
   onDemandEntries: {
     // Enable webpack hot module replacement
