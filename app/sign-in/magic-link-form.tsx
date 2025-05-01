@@ -55,13 +55,35 @@ export function MagicLinkForm() {
       
       // Clear Supabase cookies to avoid conflicts
       cookiesToClear.forEach(cookie => {
+        // Standard cookie clear for development
         document.cookie = `${cookie}=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT`;
+        
+        // Try with domain specification for production environments
+        const domain = window.location.hostname;
+        document.cookie = `${cookie}=; path=/; domain=${domain}; expires=Thu, 01 Jan 1970 00:00:00 GMT`;
+        
+        // For production domains, also try with leading dot for subdomains
+        if (domain !== 'localhost') {
+          const rootDomain = domain.split('.').slice(-2).join('.');
+          document.cookie = `${cookie}=; path=/; domain=.${rootDomain}; expires=Thu, 01 Jan 1970 00:00:00 GMT`;
+        }
       });
       
+      // Find and clear any other auth-related cookies
       document.cookie.split('; ').forEach(cookie => {
         const [name] = cookie.split('=');
-        if (name.includes('-auth-token') || name.startsWith('sb-')) {
+        if (name.includes('-auth-token') || name.startsWith('sb-') || name.includes('clerk')) {
+          // Clear for all domains and paths
           document.cookie = `${name}=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT`;
+          
+          const domain = window.location.hostname;
+          document.cookie = `${name}=; path=/; domain=${domain}; expires=Thu, 01 Jan 1970 00:00:00 GMT`;
+          
+          // For production domains
+          if (domain !== 'localhost') {
+            const rootDomain = domain.split('.').slice(-2).join('.');
+            document.cookie = `${name}=; path=/; domain=.${rootDomain}; expires=Thu, 01 Jan 1970 00:00:00 GMT`;
+          }
         }
       });
       

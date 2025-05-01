@@ -50,24 +50,40 @@ export async function GET(request: NextRequest) {
     console.log('[Auth Callback] User email:', data.user?.email);
     console.log('[Auth Callback] Session expires at:', data.session?.expires_at);
     
-    // Important: Get all cookies from Supabase's response to ensure they're properly set
-    const requestHeaders = new Headers(request.headers)
-    const responseCookies = requestHeaders.getSetCookie();
-    
-    console.log('[Auth Callback] Cookies to set:', responseCookies.length);
-    
     // Create a response that redirects to the dashboard
     const response = NextResponse.redirect(new URL('/', request.url))
     
-    // Copy all cookies from Supabase response to our response
-    if (responseCookies.length > 0) {
-      console.log('[Auth Callback] Adding cookies to response');
-      responseCookies.forEach(cookie => {
-        console.log('[Auth Callback] Setting cookie:', cookie.split(';')[0]); // Log just the cookie name part
-        response.headers.append('Set-Cookie', cookie)
-      })
-    } else {
-      console.warn('[Auth Callback] No cookies received from Supabase');
+    // Get all cookies from Supabase's response to ensure they're properly set
+    try {
+      const requestHeaders = new Headers(request.headers)
+      
+      // Try to use getSetCookie method which might not be available in all environments
+      if (typeof requestHeaders.getSetCookie === 'function') {
+        const responseCookies = requestHeaders.getSetCookie();
+        console.log('[Auth Callback] Cookies to set:', responseCookies.length);
+        
+        // Copy all cookies from Supabase response to our response
+        if (responseCookies.length > 0) {
+          console.log('[Auth Callback] Adding cookies to response');
+          responseCookies.forEach(cookie => {
+            console.log('[Auth Callback] Setting cookie:', cookie.split(';')[0]); // Log just the cookie name part
+            response.headers.append('Set-Cookie', cookie)
+          })
+        } else {
+          console.warn('[Auth Callback] No cookies received from Supabase via getSetCookie method');
+        }
+      } else {
+        // Fallback for environments where getSetCookie is not available
+        console.log('[Auth Callback] getSetCookie method not available, relying on server-side cookie handling');
+        
+        // The server-side Supabase client should have already set the cookies
+        // in the cookies store, which should be automatically included in the response
+        console.log('[Auth Callback] Using server-side cookie store instead');
+      }
+    } catch (cookieError) {
+      console.error('[Auth Callback] Error handling cookies:', cookieError);
+      // Continue with the response even if cookie handling fails
+      // The cookies might still be set by the Supabase client
     }
 
     return response

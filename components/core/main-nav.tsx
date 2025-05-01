@@ -77,9 +77,16 @@ export default function MainNav({ session }: { session: Session | null }) {
         document.cookie = `${cookieName}=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; secure=false; samesite=lax`;
         // Try with an empty path
         document.cookie = `${cookieName}=; expires=Thu, 01 Jan 1970 00:00:00 GMT`;
-        // Try with domain specification
+        
+        // Try with domain specification for production environments
         const domain = window.location.hostname;
         document.cookie = `${cookieName}=; path=/; domain=${domain}; expires=Thu, 01 Jan 1970 00:00:00 GMT`;
+        
+        // For production domains, also try with leading dot for subdomains
+        if (domain !== 'localhost') {
+          const rootDomain = domain.split('.').slice(-2).join('.');
+          document.cookie = `${cookieName}=; path=/; domain=.${rootDomain}; expires=Thu, 01 Jan 1970 00:00:00 GMT`;
+        }
       });
       
       // Then sign out via Supabase Auth API
