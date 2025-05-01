@@ -27,75 +27,14 @@ export function createClient() {
         flowType: 'pkce',
         persistSession: true,
         detectSessionInUrl: true,
-        autoRefreshToken: true
+        autoRefreshToken: true,
+        // Use localStorage instead of cookies for more reliable persistence
+        storage: isBrowser ? localStorage : undefined
       },
-      cookies: {
-        get(name) {
-          if (!isBrowser) {
-            console.log(`[Client ${clientId}] Not in browser, skipping cookie get:`, name);
-            return null;
-          }
-          
-          const cookies = document.cookie.split(';').map(cookie => cookie.trim());
-          const cookie = cookies.find(cookie => cookie.startsWith(`${name}=`));
-          console.log(`[Client ${clientId}] Getting cookie: ${name}, exists: ${!!cookie}`);
-          if (!cookie) return null;
-          return cookie.split('=')[1];
-        },
-        set(name, value, options) {
-          if (!isBrowser) {
-            console.log(`[Client ${clientId}] Not in browser, skipping cookie set:`, name);
-            return;
-          }
-          
-          // Ensure secure cookies in production
-          const cookieOptions = {
-            // Set secure attribute unless we're on localhost
-            secure: !isLocalhost,
-            // Path should always be root to be accessible across the site
-            path: '/',
-            // Use sameSite=lax to allow redirects for auth (lowercase per spec)
-            sameSite: 'lax',
-            ...options
-          }
-          
-          console.log(`[Client ${clientId}] Setting cookie: ${name} with options:`, {
-            secure: cookieOptions.secure,
-            path: cookieOptions.path,
-            maxAge: cookieOptions.maxAge,
-            sameSite: cookieOptions.sameSite
-          });
-          
-          // Build the cookie string with provided options
-          let cookieString = `${name}=${value}`;
-          
-          if (cookieOptions.domain) cookieString += `; domain=${cookieOptions.domain}`;
-          if (cookieOptions.maxAge) cookieString += `; max-age=${cookieOptions.maxAge}`;
-          if (cookieOptions.path) cookieString += `; path=${cookieOptions.path}`;
-          if (cookieOptions.sameSite) cookieString += `; samesite=${cookieOptions.sameSite}`;
-          if (cookieOptions.secure) cookieString += `; secure`;
-          
-          // Set the cookie
-          document.cookie = cookieString;
-          
-          // Verify cookie was set
-          setTimeout(() => {
-            const cookies = document.cookie.split(';').map(cookie => cookie.trim());
-            const wasSet = cookies.some(cookie => cookie.startsWith(`${name}=`));
-            console.log(`[Client ${clientId}] Cookie set verification for ${name}: ${wasSet ? 'Success' : 'Failed'}`);
-          }, 50);
-        },
-        remove(name, options) {
-          if (!isBrowser) {
-            console.log(`[Client ${clientId}] Not in browser, skipping cookie remove:`, name);
-            return;
-          }
-          
-          console.log(`[Client ${clientId}] Removing cookie:`, name);
-          
-          // Ensure we remove the cookie from the correct path
-          const cookieString = `${name}=; max-age=0; path=${options?.path || '/'};`;
-          document.cookie = cookieString;
+      // Custom debug logger
+      global: {
+        headers: {
+          'x-client-id': clientId
         }
       }
     }

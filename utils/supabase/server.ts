@@ -22,6 +22,11 @@ export const createClient = () => {
     SUPABASE_URL,
     SUPABASE_ANON_KEY,
     {
+      auth: {
+        flowType: 'pkce',
+        persistSession: true,
+        autoRefreshToken: true
+      },
       cookies: {
         get(name: string) {
           const cookie = cookieStore.get(name)
@@ -29,19 +34,15 @@ export const createClient = () => {
           return cookie?.value
         },
         set(name: string, value: string, options: Record<string, any>) {
-          console.log(`[Server] Setting cookie: ${name} with options:`, options)
+          console.log(`[Server] Setting cookie: ${name}`)
           try {
             cookieStore.set({ 
               name, 
               value, 
               ...options,
-              // Critical for Vercel serverless functions
               path: '/',
-              // Allow cookies to be sent in cross-site requests
               sameSite: 'lax',
-              // Secure in production
               secure: process.env.NODE_ENV === 'production',
-              // Ensure the cookie is accessible client-side
               httpOnly: false
             })
           } catch (error) {

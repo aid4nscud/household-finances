@@ -7,6 +7,7 @@ export const SITE_DESCRIPTION = 'Manage your household finances with ease'
 // Ensure this matches your deployed site URL
 export const SITE_URL = process.env.NEXT_PUBLIC_BASE_URL || 
   (process.env.NODE_ENV === 'production' 
+    
     ? 'https://household-finances.vercel.app' 
     : 'http://localhost:3000')
 
