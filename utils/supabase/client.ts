@@ -6,6 +6,9 @@ import { createBrowserClient } from '@supabase/ssr'
  * to create a single instance and reuse it if possible
  */
 export function createClient() {
+  // Check if we're in a browser environment
+  const isBrowser = typeof window !== 'undefined' && typeof document !== 'undefined'
+  
   return createBrowserClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
@@ -13,6 +16,8 @@ export function createClient() {
       cookies: {
         get(name) {
           console.log('[Client Supabase] Getting cookie:', name);
+          if (!isBrowser) return null
+          
           const cookies = document.cookie.split(';').map(cookie => cookie.trim());
           const cookie = cookies.find(cookie => cookie.startsWith(`${name}=`));
           if (!cookie) return null;
@@ -20,6 +25,8 @@ export function createClient() {
         },
         set(name, value, options) {
           console.log('[Client Supabase] Setting cookie:', name);
+          if (!isBrowser) return
+          
           // Set the cookie with the provided options
           let cookieString = `${name}=${value}`;
           
@@ -33,6 +40,8 @@ export function createClient() {
         },
         remove(name, options) {
           console.log('[Client Supabase] Removing cookie:', name);
+          if (!isBrowser) return
+          
           // Remove the cookie by setting its expiry in the past
           const cookieString = `${name}=; max-age=0; path=${options?.path || '/'}`;
           document.cookie = cookieString;
