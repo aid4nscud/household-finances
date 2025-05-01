@@ -68,9 +68,9 @@ export async function GET(request: NextRequest) {
       if (error.message.includes('code verifier')) {
         console.error(`[Auth Callback ${requestId}] PKCE code verifier issue detected`);
         
-        // Create a more informative error message with instructions to use localStorage
+        // Create a more informative error message
         return NextResponse.redirect(
-          new URL(`/sign-in?error=${encodeURIComponent('Authentication error: Session storage issue. We have updated our session handling - please try again.')}`, requestUrl.origin)
+          new URL(`/sign-in?error=${encodeURIComponent('Authentication error: Session storage issue. Please try again.')}`, requestUrl.origin)
         )
       }
       
@@ -83,55 +83,8 @@ export async function GET(request: NextRequest) {
     console.log(`[Auth Callback ${requestId}] Successfully exchanged code for session`);
     console.log(`[Auth Callback ${requestId}] User email: ${data.user?.email}`);
     
-    // Create HTML page that will handle both cookies and localStorage
-    const htmlWithJavaScript = `
-    <!DOCTYPE html>
-    <html>
-      <head>
-        <title>Authentication Successful</title>
-        <style>
-          body { font-family: system-ui, sans-serif; background-color: #f4f4f5; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; }
-          .container { background-color: white; padding: 2rem; border-radius: 0.5rem; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); max-width: 24rem; text-align: center; }
-          h1 { color: #18181b; font-size: 1.5rem; margin-bottom: 1rem; }
-          p { color: #52525b; margin-bottom: 1.5rem; }
-          .spinner { border: 3px solid #e4e4e7; border-radius: 50%; border-top: 3px solid #3b82f6; width: 1.5rem; height: 1.5rem; animation: spin 1s linear infinite; margin: 0 auto 1rem; }
-          @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        </style>
-      </head>
-      <body>
-        <div class="container">
-          <div class="spinner"></div>
-          <h1>Authentication Successful</h1>
-          <p>Redirecting you to dashboard...</p>
-        </div>
-        <script>
-          // Store session in localStorage
-          try {
-            // Get URL hash fragment for any parameters
-            const hash = window.location.hash;
-            if (hash && hash.includes('access_token')) {
-              localStorage.setItem('supabase.auth.token', hash.substring(1));
-            }
-            
-            // Redirect to dashboard after ensuring localStorage is updated
-            setTimeout(() => {
-              window.location.href = '/dashboard';
-            }, 1000);
-          } catch (e) {
-            console.error('Error storing session:', e);
-            window.location.href = '/dashboard';
-          }
-        </script>
-      </body>
-    </html>
-    `;
-    
-    // Return HTML response instead of redirect to handle both cookies and localStorage
-    return new NextResponse(htmlWithJavaScript, {
-      headers: {
-        'Content-Type': 'text/html',
-      },
-    });
+    // Simply redirect to dashboard since cookies are now handled automatically
+    return NextResponse.redirect(new URL('/dashboard', requestUrl.origin));
     
   } catch (error: any) {
     console.error(`[Auth Callback ${requestId}] Unexpected error:`, error.message);

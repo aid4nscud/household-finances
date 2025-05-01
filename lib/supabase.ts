@@ -24,7 +24,6 @@ export const supabase = createClient(
       detectSessionInUrl: true,
       // Disable debug mode in production to prevent excessive logging
       debug: false,
-      storageKey: 'supabase-auth-token',
       flowType: 'pkce'
     },
     global: {

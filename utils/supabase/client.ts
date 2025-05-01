@@ -28,8 +28,7 @@ export function createClient() {
         persistSession: true,
         detectSessionInUrl: true,
         autoRefreshToken: true,
-        // Use localStorage instead of cookies for more reliable persistence
-        storage: isBrowser ? localStorage : undefined
+        // Use cookies for session persistence as recommended by Supabase
       },
       // Custom debug logger
       global: {
