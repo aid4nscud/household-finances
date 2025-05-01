@@ -4,10 +4,9 @@
 export const SITE_NAME = 'Household Finances'
 export const SITE_DESCRIPTION = 'Manage your household finances with ease'
 
-// Ensure this matches your deployed site URL
+// Ensure this matches your deployed site URL without trailing slash
 export const SITE_URL = process.env.NEXT_PUBLIC_BASE_URL || 
   (process.env.NODE_ENV === 'production' 
-    
     ? 'https://household-finances.vercel.app' 
     : 'http://localhost:3000')
 
@@ -25,8 +24,11 @@ export const NAV_LINKS = [
   { name: 'Reports', href: '/reports' },
 ]
 
-// Authentication redirect URLs - must be an absolute URL to work in production
-export const REDIRECT_URL = new URL('/auth/callback', SITE_URL).toString();
+// Authentication redirect URL - must be an absolute URL to work in production
+// The URL Supabase will redirect to after authentication
+export const REDIRECT_URL = typeof window !== 'undefined' 
+  ? `${window.location.origin}/auth/callback`
+  : `${SITE_URL}/auth/callback`;
 
 // Log the redirect URL for debugging
 if (typeof window !== 'undefined') {

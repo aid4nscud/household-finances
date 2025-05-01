@@ -30,6 +30,10 @@ export async function GET(request: NextRequest) {
       c.startsWith('sb-') || 
       c.includes('supabase'))
     console.log(`[Auth Callback ${requestId}] Has PKCE cookies: ${hasPKCECookie}`)
+    
+    // Log critical PKCE cookie presence specifically
+    const hasCodeVerifier = cookies.some(c => c.includes('code-verifier'))
+    console.log(`[Auth Callback ${requestId}] Has code-verifier cookie: ${hasCodeVerifier}`)
   } else {
     console.log(`[Auth Callback ${requestId}] WARNING: No cookies found in request!`)
   }
@@ -56,17 +60,26 @@ export async function GET(request: NextRequest) {
     
     // Exchange the code for a session
     console.log(`[Auth Callback ${requestId}] Exchanging code for session...`);
+    console.log(`[Auth Callback ${requestId}] Code value (first characters): ${code.substring(0, 5)}...`);
     
     const { data, error } = await supabase.auth.exchangeCodeForSession(code)
     
     if (error) {
       console.error(`[Auth Callback ${requestId}] Error exchanging code:`, error.message);
+      console.error(`[Auth Callback ${requestId}] Error details:`, JSON.stringify(error));
       
       // Check for PKCE errors and provide more helpful error messages
       if (error.message.includes('code verifier')) {
         console.error(`[Auth Callback ${requestId}] PKCE code verifier issue detected`);
+        
+        // Check if the cookies include pkce data
+        const hasPKCEData = cookieHeader && 
+                         cookieHeader.includes('code-verifier')
+        
+        console.error(`[Auth Callback ${requestId}] PKCE data present in cookies: ${hasPKCEData}`);
+        
         return NextResponse.redirect(
-          new URL(`/sign-in?error=${encodeURIComponent('Authentication error: Please try again')}`, requestUrl.origin)
+          new URL(`/sign-in?error=${encodeURIComponent('Authentication error: Please try again in a new browser session')}`, requestUrl.origin)
         )
       }
       
@@ -77,17 +90,23 @@ export async function GET(request: NextRequest) {
     
     // Log successful authentication
     console.log(`[Auth Callback ${requestId}] Successfully exchanged code for session`);
+    console.log(`[Auth Callback ${requestId}] User authenticated: ${!!data.user}`);
     
     // Get next parameter if exists, otherwise redirect to dashboard
     const next = requestUrl.searchParams.get('next') || '/dashboard'
-    return NextResponse.redirect(new URL(next, requestUrl.origin));
+    
+    // Add success parameter to help with debugging
+    const successUrl = new URL(next, requestUrl.origin)
+    successUrl.searchParams.set('auth_success', 'true')
+    
+    return NextResponse.redirect(successUrl);
     
   } catch (error: any) {
     console.error(`[Auth Callback ${requestId}] Unexpected error:`, error.message);
     console.error(`[Auth Callback ${requestId}] Stack trace:`, error.stack);
     
     return NextResponse.redirect(
-      new URL(`/sign-in?error=${encodeURIComponent('An authentication error occurred')}`, requestUrl.origin)
+      new URL(`/sign-in?error=${encodeURIComponent('An unexpected authentication error occurred')}`, requestUrl.origin)
     )
   }
 } 

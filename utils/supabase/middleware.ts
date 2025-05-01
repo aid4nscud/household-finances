@@ -9,15 +9,43 @@ export async function updateSession(request: NextRequest) {
     },
   })
 
+  // For debugging, log PKCE cookies
+  const cookieHeader = request.headers.get('cookie')
+  if (cookieHeader) {
+    const hasPKCECookie = cookieHeader.includes('code-verifier') || 
+                         cookieHeader.includes('sb-');
+    
+    // Only log in non-production environments
+    if (process.env.NODE_ENV !== 'production' && hasPKCECookie) {
+      const cookies = cookieHeader.split(';')
+        .map(c => c.trim().split('=')[0])
+        .filter(c => c.includes('code-verifier') || c.startsWith('sb-'));
+      
+      console.log('[Middleware Helper] PKCE cookies present:', cookies);
+    }
+  }
+
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
       cookies: {
         get(name) {
-          return request.cookies.get(name)?.value
+          const cookie = request.cookies.get(name)
+          // Log PKCE cookies for debugging in non-production
+          if (process.env.NODE_ENV !== 'production' && 
+             (name.includes('code-verifier') || name.startsWith('sb-'))) {
+            console.log(`[Middleware Helper] Getting cookie: ${name}, exists: ${!!cookie}`);
+          }
+          return cookie?.value
         },
         set(name, value, options) {
+          // Log PKCE cookies for debugging in non-production
+          if (process.env.NODE_ENV !== 'production' && 
+             (name.includes('code-verifier') || name.startsWith('sb-'))) {
+            console.log(`[Middleware Helper] Setting cookie: ${name}`);
+          }
+          
           // This is a safe way to set request cookies by getting all current cookies
           // and then setting the cookie values including the new one
           const requestHeaders = new Headers(request.headers)
@@ -42,9 +70,19 @@ export async function updateSession(request: NextRequest) {
             value,
             ...options,
             path: options?.path ?? '/',
+            // Make sure SameSite is appropriate
+            sameSite: options?.sameSite ?? 'lax',
+            // Make sure secure is set for production
+            secure: process.env.NODE_ENV === 'production'
           })
         },
         remove(name, options) {
+          // Log PKCE cookies for debugging in non-production
+          if (process.env.NODE_ENV !== 'production' && 
+             (name.includes('code-verifier') || name.startsWith('sb-'))) {
+            console.log(`[Middleware Helper] Removing cookie: ${name}`);
+          }
+          
           // Only modify response cookies
           response = NextResponse.next({
             request: {
@@ -64,7 +102,7 @@ export async function updateSession(request: NextRequest) {
     }
   )
 
-  // Refresh the session
+  // Refresh the session - this will set/refresh cookies if a session exists
   await supabase.auth.getUser()
 
   return response

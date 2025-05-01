@@ -44,56 +44,6 @@ export function MagicLinkForm() {
     try {
       console.log('[MagicLinkForm] Initiating sign in with magic link')
       
-      // Clear any existing auth cookies before starting a new auth flow
-      const cookiesToClear = [
-        'sb-access-token',
-        'sb-refresh-token',
-        'sb-auth-token',
-        'supabase-auth-token',
-        'supabase-auth-token-code-verifier',
-      ];
-      
-      // Clear Supabase cookies to avoid conflicts
-      cookiesToClear.forEach(cookie => {
-        // Standard cookie clear for development
-        document.cookie = `${cookie}=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT`;
-        
-        // Try with domain specification for production environments
-        const domain = window.location.hostname;
-        document.cookie = `${cookie}=; path=/; domain=${domain}; expires=Thu, 01 Jan 1970 00:00:00 GMT`;
-        
-        // For production domains, also try with leading dot for subdomains
-        if (domain !== 'localhost') {
-          const rootDomain = domain.split('.').slice(-2).join('.');
-          document.cookie = `${cookie}=; path=/; domain=.${rootDomain}; expires=Thu, 01 Jan 1970 00:00:00 GMT`;
-        }
-      });
-      
-      // Find and clear any other auth-related cookies
-      document.cookie.split('; ').forEach(cookie => {
-        const [name] = cookie.split('=');
-        if (name.includes('-auth-token') || name.startsWith('sb-') || name.includes('clerk')) {
-          // Clear for all domains and paths
-          document.cookie = `${name}=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT`;
-          
-          const domain = window.location.hostname;
-          document.cookie = `${name}=; path=/; domain=${domain}; expires=Thu, 01 Jan 1970 00:00:00 GMT`;
-          
-          // For production domains
-          if (domain !== 'localhost') {
-            const rootDomain = domain.split('.').slice(-2).join('.');
-            document.cookie = `${name}=; path=/; domain=.${rootDomain}; expires=Thu, 01 Jan 1970 00:00:00 GMT`;
-          }
-        }
-      });
-      
-      // Set up PKCE auth with dynamic redirect URL
-      const origin = typeof window !== 'undefined' ? window.location.origin : 'http://localhost:3000';
-      const redirectTo = `${origin}/auth/callback`;
-      
-      console.log('[MagicLinkForm] Current origin:', origin);
-      console.log('[MagicLinkForm] Redirect URL:', redirectTo);
-      
       // Make sure cookies are enabled before continuing
       const testCookie = 'supabase-test-cookie';
       document.cookie = `${testCookie}=1; path=/; max-age=60`;
@@ -104,10 +54,16 @@ export function MagicLinkForm() {
         throw new Error('Cookies must be enabled in your browser to sign in');
       }
       
+      // Get the dynamic origin for proper redirects
+      const origin = typeof window !== 'undefined' ? window.location.origin : 'http://localhost:3000';
+      
+      // Use the consistent REDIRECT_URL from constants
+      console.log('[MagicLinkForm] Using redirect URL:', REDIRECT_URL);
+      
       const { data, error } = await supabase.auth.signInWithOtp({
         email: values.email,
         options: {
-          emailRedirectTo: redirectTo,
+          emailRedirectTo: REDIRECT_URL,
           shouldCreateUser: true,
         },
       })

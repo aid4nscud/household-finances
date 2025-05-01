@@ -4,12 +4,46 @@ import { createServerClient } from '@supabase/ssr'
 
 // This middleware refreshes the user's session and checks if they're logged in
 export async function middleware(request: NextRequest) {
-  // Handle root path specially to make sure it always works
   const { pathname } = request.nextUrl
   
+  // For auth callback routes, prioritize passing cookies properly
+  if (pathname.startsWith('/auth/callback')) {
+    console.log('[Middleware] Auth callback detected, preserving cookies');
+    const cookieHeader = request.headers.get('cookie');
+    
+    if (cookieHeader) {
+      // Log PKCE-related cookies for debugging
+      const cookies = cookieHeader.split(';').map(c => c.trim().split('=')[0]);
+      const pkce = cookies.filter(c => 
+        c.includes('code-verifier') || 
+        c.startsWith('sb-')
+      );
+      
+      if (pkce.length > 0) {
+        console.log('[Middleware] PKCE cookies present:', pkce);
+      } else {
+        console.log('[Middleware] Warning: No PKCE cookies found in auth callback');
+      }
+    }
+    
+    // Let the callback route handle everything
+    return NextResponse.next();
+  }
+  
+  // Handle root path specially with fast redirect
   if (pathname === '/') {
     try {
-      // Create supabase client to check auth status
+      // Fast check for auth cookie before full verification
+      const hasAuthCookie = request.cookies.has('sb-access-token') || 
+                           request.cookies.has('sb-refresh-token');
+      
+      if (!hasAuthCookie) {
+        // No auth cookies found, redirect to sign-in
+        console.log('[Middleware] No auth cookies found, redirecting to sign-in');
+        return NextResponse.redirect(new URL('/sign-in', request.url));
+      }
+      
+      // Verify the session with Supabase
       const supabase = createServerClient(
         process.env.NEXT_PUBLIC_SUPABASE_URL!,
         process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
@@ -22,25 +56,22 @@ export async function middleware(request: NextRequest) {
         }
       )
       
-      // Check if user is logged in
       const { data } = await supabase.auth.getUser()
-      
-      // Redirect based on auth status
       if (data.user) {
         // User is logged in, redirect to dashboard
         return NextResponse.redirect(new URL('/dashboard', request.url))
       } else {
-        // User is not logged in, redirect to sign-in
+        // Auth cookies exist but they're invalid
+        console.log('[Middleware] Invalid auth cookies, redirecting to sign-in');
         return NextResponse.redirect(new URL('/sign-in', request.url))
       }
     } catch (error) {
-      console.error('Error in root redirect middleware:', error)
-      // If anything fails, redirect to sign-in as a fallback
+      console.error('[Middleware] Error in root redirect:', error)
       return NextResponse.redirect(new URL('/sign-in', request.url))
     }
   }
   
-  // For all other routes, update the auth session
+  // For all other routes, use the regular auth session handling
   return await updateSession(request)
 }
 
