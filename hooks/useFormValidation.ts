@@ -55,8 +55,9 @@ export const useFormValidation = ({ initialFormState }: UseFormValidationProps):
     const fieldData = { [name]: value };
     
     try {
-      // Validate the specific field
-      formDataSchema.pick({ [name]: true }).parse(fieldData);
+      // Validate the specific field using a dynamic key value pair approach
+      const fieldSchema = formDataSchema.pick({ [name]: true } as any);
+      fieldSchema.parse(fieldData);
       
       // Clear error if validation passes
       setErrors(prev => ({ ...prev, [name]: null }));

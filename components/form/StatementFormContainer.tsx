@@ -8,11 +8,10 @@ import { NumericFormData } from '@/types/index'
 import { useToast } from '@/hooks/use-toast'
 import { Card, CardContent } from '@/components/ui/card'
 import { FormError } from '@/components/ui/form-error'
-import { Badge } from '@/components/ui/badge'
-import { PenLine } from 'lucide-react'
+import { Badge, PenLine } from 'lucide-react'
 
 export function StatementFormContainer({ 
-  initialEmail, 
+  initialEmail,
   existingStatement = null 
 }: { 
   initialEmail: string;
@@ -306,7 +305,7 @@ export function StatementFormContainer({
           
           {isEditMode && (
             <div className="mt-4 md:mt-0">
-              <Badge variant="outline" className="px-3 py-1 text-sm flex items-center gap-1.5 bg-primary/5 border-primary/20">
+              <Badge className="px-3 py-1 text-sm flex items-center gap-1.5 bg-primary/5 border-primary/20">
                 <PenLine className="h-3.5 w-3.5 text-primary" />
                 <span>Editing Statement</span>
               </Badge>

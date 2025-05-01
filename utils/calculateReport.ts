@@ -35,12 +35,15 @@ function calculateReport(data: NumericFormData): IncomeStatement {
     healthcare = 0,
     childcareEducation = 0,
     insurance = 0,
+    debtPayments = 0,
+    personalCareMedical = 0,
     
     // Savings & Investments
     shortTermSavings = 0,
     longTermInvestments = 0,
     educationSavings = 0,
     charitableGiving = 0,
+    retirementSavings = 0,
     
     // Wants / Discretionary Expenses
     entertainmentLeisure = 0,
@@ -48,6 +51,9 @@ function calculateReport(data: NumericFormData): IncomeStatement {
     shoppingPersonal = 0,
     fitnessWellness = 0,
     travelVacations = 0,
+    subscriptions = 0,
+    hobbiesRecreation = 0,
+    giftsSupport = 0,
     
     // Annual or Irregular Expenses
     annualLicenses = 0,
@@ -55,11 +61,12 @@ function calculateReport(data: NumericFormData): IncomeStatement {
     holidayGifts = 0,
     personalCelebrations = 0,
     familyEvents = 0,
+    vehicleMaintenance = 0,
+    professionalDevelopment = 0,
     
     // Additional Fields for Ratios
     liquidAssets = 0,
     currentLiabilities = 0,
-    debtPayments = 0,
     insuranceCoverage = 0,
     necessaryExpenses = 0,
     enjoymentSpend = 0,
@@ -80,19 +87,24 @@ function calculateReport(data: NumericFormData): IncomeStatement {
   
   // Calculate Essential Needs Expenses
   const totalNeedsExpenses = Number(housingExpenses) + Number(utilities) + Number(foodGroceries) + 
-                             Number(transportation) + Number(healthcare) + Number(childcareEducation) + Number(insurance);
+                             Number(transportation) + Number(healthcare) + Number(childcareEducation) + 
+                             Number(insurance) + Number(debtPayments) + Number(personalCareMedical);
   
   // Calculate Savings & Investments
   const totalSavingsInvestments = Number(shortTermSavings) + Number(longTermInvestments) + 
-                                  Number(educationSavings) + Number(charitableGiving);
+                                  Number(educationSavings) + Number(charitableGiving) + 
+                                  Number(retirementSavings);
   
   // Calculate Discretionary Expenses
   const totalWantsExpenses = Number(entertainmentLeisure) + Number(diningOut) + 
-                             Number(shoppingPersonal) + Number(fitnessWellness) + Number(travelVacations);
+                             Number(shoppingPersonal) + Number(fitnessWellness) + 
+                             Number(travelVacations) + Number(subscriptions) + 
+                             Number(hobbiesRecreation) + Number(giftsSupport);
   
   // Calculate Annual/Irregular Expenses
   const totalAnnualExpenses = Number(annualLicenses) + Number(homeRepairs) + Number(holidayGifts) + 
-                              Number(personalCelebrations) + Number(familyEvents);
+                              Number(personalCelebrations) + Number(familyEvents) + 
+                              Number(vehicleMaintenance) + Number(professionalDevelopment);
   
   // Calculate Profit Metrics
   const grossProfit = netRevenue - totalNeedsExpenses - totalSavingsInvestments;
@@ -168,6 +180,8 @@ function calculateReport(data: NumericFormData): IncomeStatement {
       healthcare: { value: Number(healthcare), formatted: formatCurrency(Number(healthcare)) },
       childcareEducation: { value: Number(childcareEducation), formatted: formatCurrency(Number(childcareEducation)) },
       insurance: { value: Number(insurance), formatted: formatCurrency(Number(insurance)) },
+      debtPayments: { value: Number(debtPayments || 0), formatted: formatCurrency(Number(debtPayments || 0)) },
+      personalCareMedical: { value: Number(personalCareMedical || 0), formatted: formatCurrency(Number(personalCareMedical || 0)) },
       totalNeedsExpenses: { value: totalNeedsExpenses, formatted: formatCurrency(totalNeedsExpenses) },
       percentOfIncome: formatPercentage(totalNeedsExpenses, netRevenue)
     },
@@ -176,6 +190,7 @@ function calculateReport(data: NumericFormData): IncomeStatement {
       longTermInvestments: { value: Number(longTermInvestments), formatted: formatCurrency(Number(longTermInvestments)) },
       educationSavings: { value: Number(educationSavings), formatted: formatCurrency(Number(educationSavings)) },
       charitableGiving: { value: Number(charitableGiving), formatted: formatCurrency(Number(charitableGiving)) },
+      retirementSavings: { value: Number(retirementSavings || 0), formatted: formatCurrency(Number(retirementSavings || 0)) },
       totalSavingsInvestments: { value: totalSavingsInvestments, formatted: formatCurrency(totalSavingsInvestments) },
       percentOfIncome: formatPercentage(totalSavingsInvestments, netRevenue)
     },
@@ -186,6 +201,9 @@ function calculateReport(data: NumericFormData): IncomeStatement {
       shoppingPersonal: { value: Number(shoppingPersonal), formatted: formatCurrency(Number(shoppingPersonal)) },
       fitnessWellness: { value: Number(fitnessWellness), formatted: formatCurrency(Number(fitnessWellness)) },
       travelVacations: { value: Number(travelVacations), formatted: formatCurrency(Number(travelVacations)) },
+      subscriptions: { value: Number(subscriptions || 0), formatted: formatCurrency(Number(subscriptions || 0)) },
+      hobbiesRecreation: { value: Number(hobbiesRecreation || 0), formatted: formatCurrency(Number(hobbiesRecreation || 0)) },
+      giftsSupport: { value: Number(giftsSupport || 0), formatted: formatCurrency(Number(giftsSupport || 0)) },
       totalWantsExpenses: { value: totalWantsExpenses, formatted: formatCurrency(totalWantsExpenses) },
       percentOfIncome: formatPercentage(totalWantsExpenses, netRevenue)
     },
@@ -196,6 +214,8 @@ function calculateReport(data: NumericFormData): IncomeStatement {
       holidayGifts: { value: Number(holidayGifts), formatted: formatCurrency(Number(holidayGifts)) },
       personalCelebrations: { value: Number(personalCelebrations), formatted: formatCurrency(Number(personalCelebrations)) },
       familyEvents: { value: Number(familyEvents), formatted: formatCurrency(Number(familyEvents)) },
+      vehicleMaintenance: { value: Number(vehicleMaintenance || 0), formatted: formatCurrency(Number(vehicleMaintenance || 0)) },
+      professionalDevelopment: { value: Number(professionalDevelopment || 0), formatted: formatCurrency(Number(professionalDevelopment || 0)) },
       totalAnnualExpenses: { value: totalAnnualExpenses, formatted: formatCurrency(totalAnnualExpenses) }
     },
     finalNetIncome: { value: finalNetIncome, formatted: formatCurrency(finalNetIncome) },

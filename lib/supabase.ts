@@ -23,16 +23,7 @@ export const supabase = createClient(
       detectSessionInUrl: true,
       // Set debug to true to enable detailed logging for auth
       debug: process.env.NODE_ENV !== 'production',
-      storageKey: 'supabase-auth-token',
-      // Make sure cookies are accessible from middleware with improved security
-      cookieOptions: {
-        path: '/',
-        // Use 'strict' for better security
-        sameSite: 'strict',
-        secure: true,
-        // Shorter session lifetime for better security (3 days instead of 1 week)
-        maxAge: 3600 * 24 * 3, 
-      }
+      storageKey: 'supabase-auth-token'
     },
     global: {
       headers: {

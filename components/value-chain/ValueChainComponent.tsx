@@ -134,7 +134,7 @@ export function ValueChainComponent({ userId, statement, existingValueChain }: V
         toast({
           title: "Value Chain Updated",
           description: "Your values have been updated successfully.",
-          variant: "success"
+          variant: "default"
         })
       } else {
         // Create new value chain
@@ -150,7 +150,7 @@ export function ValueChainComponent({ userId, statement, existingValueChain }: V
         toast({
           title: "Value Chain Created",
           description: "Your values have been saved successfully.",
-          variant: "success"
+          variant: "default"
         })
       }
 

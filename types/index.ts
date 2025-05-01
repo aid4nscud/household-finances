@@ -97,14 +97,115 @@ export interface Insight {
 }
 
 export interface IncomeStatement {
-  id: string;
-  created_at: string;
-  user_id: string;
+  personalInfo?: {
+    name: string;
+  };
+  income: {
+    primaryIncome: CurrencyField;
+    secondaryIncome: CurrencyField;
+    investmentIncome: CurrencyField;
+    governmentBenefits: CurrencyField;
+    alimonyChildSupport: CurrencyField;
+    otherIncome: CurrencyField;
+    grossRevenue: CurrencyField;
+  };
+  preTaxDeductions: {
+    federalIncomeTax: CurrencyField;
+    stateIncomeTax: CurrencyField;
+    ficaTax: CurrencyField;
+    retirementContributions: CurrencyField;
+    healthInsurancePremiums: CurrencyField;
+    hsaFsaContributions: CurrencyField;
+    unionDues: CurrencyField;
+    otherPayrollDeductions: CurrencyField;
+    totalPreTaxDeductions: CurrencyField;
+  };
+  netRevenue: CurrencyField;
+  essentialNeeds: {
+    housingExpenses: CurrencyField;
+    utilities: CurrencyField;
+    foodGroceries: CurrencyField;
+    transportation: CurrencyField;
+    healthcare: CurrencyField;
+    childcareEducation: CurrencyField;
+    insurance: CurrencyField;
+    debtPayments: CurrencyField;
+    personalCareMedical: CurrencyField;
+    totalNeedsExpenses: CurrencyField;
+    percentOfIncome?: string;
+  };
+  savingsInvestments: {
+    shortTermSavings: CurrencyField;
+    longTermInvestments: CurrencyField;
+    educationSavings: CurrencyField;
+    charitableGiving: CurrencyField;
+    retirementSavings: CurrencyField;
+    totalSavingsInvestments: CurrencyField;
+    percentOfIncome?: string;
+  };
+  grossProfit: CurrencyField;
+  discretionaryExpenses: {
+    entertainmentLeisure: CurrencyField;
+    diningOut: CurrencyField;
+    shoppingPersonal: CurrencyField;
+    fitnessWellness: CurrencyField;
+    travelVacations: CurrencyField;
+    subscriptions: CurrencyField;
+    hobbiesRecreation: CurrencyField;
+    giftsSupport: CurrencyField;
+    totalWantsExpenses: CurrencyField;
+    percentOfIncome?: string;
+  };
+  netProfit: CurrencyField;
+  annualExpenses: {
+    annualLicenses: CurrencyField;
+    homeRepairs: CurrencyField;
+    holidayGifts: CurrencyField;
+    personalCelebrations: CurrencyField;
+    familyEvents: CurrencyField;
+    vehicleMaintenance: CurrencyField;
+    professionalDevelopment: CurrencyField;
+    totalAnnualExpenses: CurrencyField;
+  };
+  finalNetIncome: CurrencyField;
+  recommendations: {
+    needs: RecommendationField;
+    wants: RecommendationField;
+    savings: RecommendationField;
+  };
+  financialRatios?: Record<string, string>;
+  valueChainOpportunities?: ValueCategory[];
+  insights: string[] | Insight[];
+  id?: string;
+  created_at?: string;
+  user_id?: string;
   user_name?: string;
   user_email?: string;
-  statement_data: StatementData;
+  statement_data?: StatementData;
 }
 
+interface CurrencyField {
+  value: number;
+  formatted: string;
+}
+
+interface RecommendationField {
+  recommended: string;
+  actual: string;
+  difference: string;
+  status: 'good' | 'high' | 'low';
+}
+
+export interface ValueCategory {
+  id?: string;
+  name: string;
+  spending: number;
+  monthlyAmount?: number;
+  valueAlignment?: string;
+  recommendations: string[];
+}
+
+// Preserve the existing StatementData type for backward compatibility
 export interface StatementData {
   income: {
     primaryIncome: CurrencyField;
@@ -176,29 +277,7 @@ export interface StatementData {
     wants: RecommendationField;
     savings: RecommendationField;
   };
-  valueChainOpportunities: ValueCategory[];
   insights: string[];
-}
-
-interface CurrencyField {
-  value: number;
-  formatted: string;
-}
-
-interface RecommendationField {
-  recommended: string;
-  actual: string;
-  difference: string;
-  status: 'good' | 'high' | 'low';
-}
-
-export interface ValueCategory {
-  id?: string;
-  name: string;
-  spending: number;
-  monthlyAmount?: number;
-  valueAlignment?: string;
-  recommendations: string[];
 }
 
 // Form Steps Type

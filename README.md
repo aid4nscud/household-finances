@@ -9,7 +9,6 @@ A web application for generating personalized income statements to better unders
 - View and analyze financial data with the 50/30/20 rule
 - Store and view history of past statements
 - Export statements to Excel
-- Email statements to users
 - Responsive design that works on all devices
 
 ## Tech Stack
@@ -18,7 +17,6 @@ A web application for generating personalized income statements to better unders
 - **UI Components:** Shadcn UI, Radix UI
 - **Authentication:** Supabase Auth
 - **Database:** Supabase PostgreSQL
-- **Email:** Nodemailer
 - **Styling:** Tailwind CSS
 - **Form Validation:** Zod, React Hook Form
 
@@ -28,7 +26,6 @@ A web application for generating personalized income statements to better unders
 
 - Node.js 18+ installed
 - A Supabase account and project
-- Email service credentials (for sending statements)
 
 ### Environment Setup
 
@@ -39,13 +36,6 @@ Create a `.env.local` file in the root directory with the following variables:
 NEXT_PUBLIC_SUPABASE_URL=your-supabase-url
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your-supabase-anon-key
 SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
-
-# Email configuration
-EMAIL_HOST=your-email-host
-EMAIL_PORT=587
-EMAIL_USERNAME=your-email-username
-EMAIL_PASSWORD=your-email-password
-EMAIL_FROM=your-email-from
 ```
 
 ### Supabase Setup

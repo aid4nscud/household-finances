@@ -22,16 +22,19 @@ const SavingsInvestmentsStep: React.FC<SavingsInvestmentsStepProps> = ({
   // Memoize rendered fields to prevent unnecessary re-renders
   const renderNumberField = useMemo(() => {
     return (id: keyof FormData, label: string, placeholder = '0.00', tooltip: string | null = null) => {
+      const errorValue = errors[id] !== null ? errors[id] : undefined;
+
       return (
         <NumberField
           key={id}
           id={id}
+          name={id.toString()}
           label={label}
           value={formData[id]}
           placeholder={placeholder}
           onChange={handleChange}
           onBlur={handleBlur}
-          error={errors[id]}
+          error={errorValue}
           touched={touched[id]}
           disabled={isSubmitting}
           tooltip={tooltip}
