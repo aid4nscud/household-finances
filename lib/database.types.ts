@@ -41,6 +41,83 @@ export interface Database {
             referencedColumns: ["id"]
           }
         ]
+      },
+      income_statements: {
+        Row: {
+          id: string
+          created_at: string | null
+          updated_at: string | null
+          user_id: string
+          amount: number
+          category: string | null
+          description: string | null
+          date: string | null
+          type: string | null
+        }
+        Insert: {
+          id?: string
+          created_at?: string | null
+          updated_at?: string | null
+          user_id: string
+          amount: number
+          category?: string | null
+          description?: string | null
+          date?: string | null
+          type?: string | null
+        }
+        Update: {
+          id?: string
+          created_at?: string | null
+          updated_at?: string | null
+          user_id?: string
+          amount?: number
+          category?: string | null
+          description?: string | null
+          date?: string | null
+          type?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "income_statements_user_id_fkey"
+            columns: ["user_id"]
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          }
+        ]
+      },
+      value_chains: {
+        Row: {
+          id: string
+          created_at: string | null
+          updated_at: string | null
+          user_id: string
+          chain_data: Json
+          name: string | null
+        }
+        Insert: {
+          id?: string
+          created_at?: string | null
+          updated_at?: string | null
+          user_id: string
+          chain_data: Json
+          name?: string | null
+        }
+        Update: {
+          id?: string
+          created_at?: string | null
+          updated_at?: string | null
+          user_id?: string
+          chain_data?: Json
+          name?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "value_chains_user_id_fkey"
+            columns: ["user_id"]
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          }
+        ]
       }
       // Add other tables as needed
     }
