@@ -21,8 +21,8 @@ export const NAV_LINKS = [
   { name: 'Reports', href: '/reports' },
 ]
 
-// Authentication redirect URLs
-export const REDIRECT_URL = `${SITE_URL}/auth/callback`;
+// Authentication redirect URLs - must be an absolute URL to work in production
+export const REDIRECT_URL = new URL('/auth/callback', process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000').toString();
 
 // Session expiry time (in seconds)
 export const SESSION_EXPIRY = 60 * 60 * 24 * 7; // 7 days 
