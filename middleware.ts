@@ -10,100 +10,50 @@ export async function middleware(request: NextRequest) {
   console.log(`[Middleware] Request to: ${request.nextUrl.pathname}`)
   
   try {
-    // Create a response object that we'll use to handle the response
-    let response = NextResponse.next()
+    // Create a response object to modify later if needed
+    let response = NextResponse.next({
+      request: {
+        headers: request.headers,
+      },
+    })
     
-    // Create a Supabase client specifically for the middleware
+    // Create a Supabase client for handling auth
     const supabase = createServerClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
       {
         cookies: {
-          getAll() {
-            try {
-              // Get all cookies from the request
-              const allCookies = request.cookies.getAll();
-              
-              // Check for problematic auth cookies and exclude them if they seem malformed
-              return allCookies.filter(cookie => {
-                // If this is an auth cookie, validate it
-                if (['sb-access-token', 'sb-refresh-token', 'supabase-auth-token'].includes(cookie.name)) {
-                  try {
-                    // For JWT tokens, they should start with ey
-                    if (cookie.name.startsWith('sb-') && !cookie.value.startsWith('ey')) {
-                      console.log(`[Middleware] Filtering out malformed cookie: ${cookie.name}`);
-                      return false;
-                    }
-                    
-                    // For JSON objects, try parsing them
-                    if (cookie.name === 'supabase-auth-token') {
-                      JSON.parse(cookie.value);
-                    }
-                    
-                    return true;
-                  } catch (error) {
-                    console.error(`[Middleware] Invalid cookie format for ${cookie.name}, removing it`);
-                    return false;
-                  }
-                }
-                return true;
-              });
-            } catch (error) {
-              console.error('[Middleware] Error getting cookies:', error);
-              return [];
-            }
+          get(name) {
+            return request.cookies.get(name)?.value
           },
-          setAll(cookiesToSet) {
-            try {
-              cookiesToSet.forEach(({ name, value, options }) => {
-                // Ensure cookie values are properly stringified if they're objects
-                const cookieValue = typeof value === 'object' ? JSON.stringify(value) : value;
-                request.cookies.set(name, cookieValue);
-              });
-              
-              // Create a new response with the updated cookies
-              response = NextResponse.next({
-                request: {
-                  headers: request.headers,
-                },
-              });
-              
-              cookiesToSet.forEach(({ name, value, options }) => {
-                // Ensure cookie values are properly stringified if they're objects
-                const cookieValue = typeof value === 'object' ? JSON.stringify(value) : value;
-                response.cookies.set(name, cookieValue, options);
-              });
-            } catch (error) {
-              console.error('[Middleware] Error setting cookies:', error);
-              response = NextResponse.next({
-                request: {
-                  headers: request.headers,
-                },
-              });
-            }
+          set(name, value, options) {
+            request.cookies.set(name, value)
+            response = NextResponse.next({
+              request: {
+                headers: request.headers,
+              },
+            })
+            response.cookies.set(name, value, options)
+          },
+          remove(name, options) {
+            request.cookies.delete(name)
+            response = NextResponse.next({
+              request: {
+                headers: request.headers,
+              },
+            })
+            response.cookies.delete(name)
           },
         },
       }
-    );
+    )
     
-    // Safely attempt to get the session
-    let session: Session | null = null;
-    try {
-      // Refresh session if expired - required for auth persistence
-      const { data } = await supabase.auth.getSession();
-      session = data.session;
-    } catch (error) {
-      console.error('[Middleware] Error refreshing session:', error);
-      
-      // Clear all authentication cookies to allow a clean sign-in
-      response.cookies.delete('sb-access-token');
-      response.cookies.delete('sb-refresh-token');
-      response.cookies.delete('supabase-auth-token');
-    }
+    // Check the auth state
+    const { data: { session } } = await supabase.auth.getSession()
     
-    // URL information for routing decisions
-    const url = request.nextUrl.clone();
-    const { pathname } = url;
+    // Handle path redirects based on auth state
+    const url = request.nextUrl.clone()
+    const { pathname } = url
     
     // Check if the request is for a protected route
     const isProtectedRoute = pathname.startsWith('/dashboard') || 
@@ -117,6 +67,9 @@ export async function middleware(request: NextRequest) {
     const isAuthCallback = pathname.startsWith('/auth/callback');
     
     if (isAuthCallback) {
+      console.log('[Middleware] Allowing auth callback request:', pathname);
+      // Important: For auth callback, we must return the original response
+      // without any modifications to ensure cookies are properly set
       return response;
     }
     
@@ -127,31 +80,28 @@ export async function middleware(request: NextRequest) {
     
     // If the route is protected and the user is not logged in, redirect to sign-in
     if (isProtectedRoute && !session) {
-      const redirectUrl = new URL('/sign-in', SITE_URL);
-      return NextResponse.redirect(redirectUrl);
+      url.pathname = '/sign-in'
+      return NextResponse.redirect(url)
     }
     
     // If the user is logged in and trying to access an auth route, redirect to dashboard
     if (isAuthRoute && session) {
-      const redirectUrl = new URL('/dashboard', SITE_URL);
-      return NextResponse.redirect(redirectUrl);
+      url.pathname = '/dashboard'
+      return NextResponse.redirect(url)
     }
     
     // For home page, redirect based on auth status
     if (pathname === '/') {
-      if (session) {
-        const redirectUrl = new URL('/dashboard', SITE_URL);
-        return NextResponse.redirect(redirectUrl);
-      } else {
-        const redirectUrl = new URL('/sign-in', SITE_URL);
-        return NextResponse.redirect(redirectUrl);
-      }
+      console.log('[Middleware] Handling root path redirect');
+      
+      url.pathname = session ? '/dashboard' : '/sign-in'
+      return NextResponse.redirect(url)
     }
     
-    // Add a specific redirect for the history page
+    // Special redirect for history page
     if (pathname === '/dashboard/history') {
-      const redirectUrl = new URL('/dashboard/create', SITE_URL);
-      return NextResponse.redirect(redirectUrl);
+      url.pathname = '/dashboard/create'
+      return NextResponse.redirect(url)
     }
     
     return response;
@@ -162,7 +112,7 @@ export async function middleware(request: NextRequest) {
     const response = NextResponse.next();
     response.cookies.delete('sb-access-token');
     response.cookies.delete('sb-refresh-token');
-    response.cookies.delete('supabase-auth-token');
+    response.cookies.delete('sb-auth-token');
     
     return response;
   }

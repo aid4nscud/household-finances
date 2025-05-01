@@ -1,7 +1,7 @@
 'use client'
 
-import { useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useState, useEffect } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm } from 'react-hook-form'
 import * as z from 'zod'
@@ -28,6 +28,8 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form'
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
+import { AlertCircle } from 'lucide-react'
 
 // Form schema for input validation
 const formSchema = z.object({
@@ -43,9 +45,19 @@ export function AuthForm({ mode = 'signIn' }: AuthFormProps) {
   const [isLoading, setIsLoading] = useState(false)
   const [isCodeSent, setIsCodeSent] = useState(false)
   const [email, setEmail] = useState('')
+  const [errorMessage, setErrorMessage] = useState<string | null>(null)
   const router = useRouter()
+  const searchParams = useSearchParams()
   const { toast } = useToast()
   const supabase = createClient()
+
+  // Check for error in URL parameters (from auth callback redirect)
+  useEffect(() => {
+    const errorParam = searchParams?.get('error')
+    if (errorParam) {
+      setErrorMessage(decodeURIComponent(errorParam))
+    }
+  }, [searchParams])
 
   // Initialize form
   const form = useForm<z.infer<typeof formSchema>>({
@@ -58,6 +70,7 @@ export function AuthForm({ mode = 'signIn' }: AuthFormProps) {
   async function onSubmit(values: z.infer<typeof formSchema>) {
     try {
       setIsLoading(true)
+      setErrorMessage(null)
       setEmail(values.email)
       
       // Apply rate limiting based on email
@@ -65,16 +78,22 @@ export function AuthForm({ mode = 'signIn' }: AuthFormProps) {
         throw new Error('Too many requests. Please try again later.')
       }
       
+      console.log('[AuthForm] Sending magic link to:', values.email, {
+        redirectTo: REDIRECT_URL,
+        createUser: mode === 'signUp'
+      })
+      
       // Handle passwordless authentication with magic link
-      const { error } = await supabase.auth.signInWithOtp({
+      const { data, error } = await supabase.auth.signInWithOtp({
         email: values.email,
         options: {
           emailRedirectTo: REDIRECT_URL,
-          shouldCreateUser: mode === 'signUp', // Only create a new user in signUp mode
+          shouldCreateUser: mode === 'signUp' // Only create a new user in signUp mode
         },
       });
 
       if (error) {
+        console.error('[AuthForm] Auth error:', error.message)
         throw error;
       }
 
@@ -86,9 +105,15 @@ export function AuthForm({ mode = 'signIn' }: AuthFormProps) {
     } catch (error) {
       console.error('[AuthForm] Authentication error:', error)
       
+      const message = error instanceof Error 
+        ? error.message 
+        : 'Failed to send magic link'
+        
+      setErrorMessage(message)
+      
       toast({
         title: 'Error',
-        description: error instanceof Error ? error.message : 'Failed to send magic link',
+        description: message,
         variant: 'destructive',
       })
     } finally {
@@ -109,6 +134,14 @@ export function AuthForm({ mode = 'signIn' }: AuthFormProps) {
         )}
       </CardHeader>
       <CardContent className="pt-4">
+        {errorMessage && (
+          <Alert variant="destructive" className="mb-4">
+            <AlertCircle className="h-4 w-4" />
+            <AlertTitle>Error</AlertTitle>
+            <AlertDescription>{errorMessage}</AlertDescription>
+          </Alert>
+        )}
+        
         {!isCodeSent ? (
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">

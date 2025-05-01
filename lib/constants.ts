@@ -1,11 +1,25 @@
-// Site URL configuration
-// In development, we use localhost
-// In production, we use the NEXT_PUBLIC_BASE_URL environment variable or default to the deployment URL
-export const SITE_URL = 
-  process.env.NEXT_PUBLIC_BASE_URL || 
-  (process.env.NEXT_PUBLIC_VERCEL_URL 
-    ? `https://${process.env.NEXT_PUBLIC_VERCEL_URL}` 
-    : 'http://localhost:3000');
+/**
+ * Site configuration
+ */
+export const SITE_NAME = 'Household Finances'
+export const SITE_DESCRIPTION = 'Manage your household finances with ease'
+
+// Ensure this matches your deployed site URL
+export const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'
+
+// Supabase configuration
+export const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || ''
+export const SUPABASE_ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
+
+/**
+ * Navigation
+ */
+export const NAV_LINKS = [
+  { name: 'Dashboard', href: '/dashboard' },
+  { name: 'Transactions', href: '/transactions' },
+  { name: 'Categories', href: '/categories' },
+  { name: 'Reports', href: '/reports' },
+]
 
 // Authentication redirect URLs
 export const REDIRECT_URL = `${SITE_URL}/auth/callback`;

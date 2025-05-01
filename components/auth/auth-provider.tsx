@@ -13,6 +13,14 @@ type SupabaseContext = {
 
 const Context = createContext<SupabaseContext | undefined>(undefined)
 
+export function useAuth() {
+  const context = useContext(Context)
+  if (context === undefined) {
+    throw new Error('useAuth must be used within an AuthProvider')
+  }
+  return context
+}
+
 export function AuthProvider({
   children,
   initialSession,
@@ -25,27 +33,66 @@ export function AuthProvider({
   const [user, setUser] = useState<User | null>(initialSession?.user ?? null)
   const [isLoading, setIsLoading] = useState(!initialSession)
 
+  // Log initial auth state
   useEffect(() => {
-    // Only set up the listener if there's a user or we're still loading
-    if (user || isLoading) {
-      const { data: { subscription } } = supabase.auth.onAuthStateChange(
-        (event, newSession) => {
-          if (newSession?.user) {
-            setSession(newSession)
-            setUser(newSession.user)
-          } else {
-            setSession(null)
-            setUser(null)
-          }
-          setIsLoading(false)
-        }
-      )
+    console.log('[AuthProvider] Initialized with session:', !!initialSession);
+    console.log('[AuthProvider] Initial user:', initialSession?.user?.email || 'none');
+  }, [initialSession]);
 
-      return () => {
-        subscription.unsubscribe()
+  useEffect(() => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (event, newSession) => {
+        console.log('[AuthProvider] Auth state change event:', event);
+        console.log('[AuthProvider] New session exists:', !!newSession);
+        
+        if (newSession?.user) {
+          console.log('[AuthProvider] Setting authenticated user:', newSession.user.email);
+          setSession(newSession)
+          setUser(newSession.user)
+        } else {
+          console.log('[AuthProvider] Clearing user and session');
+          setSession(null)
+          setUser(null)
+        }
+        
+        setIsLoading(false)
       }
+    )
+
+    // Check session immediately on mount to handle any auth state changes that occurred
+    // before the component was mounted (e.g., during page refresh)
+    const checkSession = async () => {
+      try {
+        console.log('[AuthProvider] Checking current session');
+        const { data, error } = await supabase.auth.getSession();
+        
+        if (error) {
+          console.error('[AuthProvider] Error getting session:', error.message);
+          return;
+        }
+        
+        if (data.session) {
+          console.log('[AuthProvider] Retrieved session for user:', data.session.user.email);
+          setSession(data.session);
+          setUser(data.session.user);
+        } else {
+          console.log('[AuthProvider] No active session found');
+        }
+        
+        setIsLoading(false);
+      } catch (err) {
+        console.error('[AuthProvider] Unexpected error checking session:', err);
+        setIsLoading(false);
+      }
+    };
+    
+    checkSession();
+
+    return () => {
+      console.log('[AuthProvider] Unsubscribing from auth state changes');
+      subscription.unsubscribe()
     }
-  }, [supabase.auth, user, isLoading])
+  }, [supabase.auth]);
 
   return (
     <Context.Provider
@@ -59,12 +106,4 @@ export function AuthProvider({
       {children}
     </Context.Provider>
   )
-}
-
-export function useAuth() {
-  const context = useContext(Context)
-  if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider')
-  }
-  return context
 } 

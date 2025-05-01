@@ -40,8 +40,69 @@ export default function MainNav({ session }: { session: Session | null }) {
   }, [session])
 
   async function handleSignOut() {
-    await supabase.auth.signOut()
-    window.location.href = "/sign-in"
+    try {
+      console.log('[MainNav] Starting sign out process');
+      
+      // Clear all possible auth cookies, including both Supabase and Clerk
+      const cookiesToClear = [
+        // Supabase cookies
+        'sb-access-token',
+        'sb-refresh-token', 
+        'sb-auth-token',
+        'supabase-auth-token',
+        'supabase-auth-token-code-verifier',
+        // Clerk cookies
+        '__clerk_db_jwt',
+        '__clerk_db_jwt_YqB7Y3Gz',
+        '__client_uat',
+        '__client_uat_YqB7Y3Gz'
+      ];
+      
+      // Add project-specific Supabase cookies
+      if (typeof window !== 'undefined') {
+        // Find and clear any Supabase project-specific cookies
+        document.cookie.split('; ').forEach(cookie => {
+          const [name] = cookie.split('=');
+          if (name.includes('-auth-token') || name.startsWith('sb-')) {
+            cookiesToClear.push(name);
+          }
+        });
+      }
+      
+      // Clear all cookies with various path and domain combinations
+      cookiesToClear.forEach(cookieName => {
+        // Standard cookie clear
+        document.cookie = `${cookieName}=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT`;
+        // Without security attributes
+        document.cookie = `${cookieName}=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; secure=false; samesite=lax`;
+        // Try with an empty path
+        document.cookie = `${cookieName}=; expires=Thu, 01 Jan 1970 00:00:00 GMT`;
+        // Try with domain specification
+        const domain = window.location.hostname;
+        document.cookie = `${cookieName}=; path=/; domain=${domain}; expires=Thu, 01 Jan 1970 00:00:00 GMT`;
+      });
+      
+      // Then sign out via Supabase Auth API
+      console.log('[MainNav] Calling Supabase signOut API');
+      const { error } = await supabase.auth.signOut();
+      
+      if (error) {
+        console.error("[MainNav] Sign out API error:", error);
+        throw error;
+      }
+      
+      console.log('[MainNav] Sign out successful, redirecting to sign-in page');
+      
+      // Force a full page reload to ensure complete state reset
+      window.location.href = '/sign-in';
+    } catch (e) {
+      console.error("[MainNav] Sign out error:", e);
+      
+      // Even if there's an error, try to redirect to sign-in
+      setTimeout(() => {
+        window.location.href = '/sign-in';
+      }, 500);
+    }
   }
 
   return (
