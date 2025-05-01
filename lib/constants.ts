@@ -5,7 +5,7 @@ export const SITE_NAME = 'Household Finances'
 export const SITE_DESCRIPTION = 'Manage your household finances with ease'
 
 // Ensure this matches your deployed site URL
-export const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'
+export const SITE_URL = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'
 
 // Supabase configuration
 export const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || ''
