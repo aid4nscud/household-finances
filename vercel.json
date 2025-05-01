@@ -23,12 +23,6 @@
       ]
     }
   ],
-  "env": {
-    "NEXT_PUBLIC_VERCEL_URL": {
-      "development": "localhost:3000",
-      "production": ""
-    }
-  },
   "github": {
     "silent": true
   }
