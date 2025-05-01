@@ -14,20 +14,29 @@ export async function updateSession(request: NextRequest) {
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
       cookies: {
-        get(name: string) {
+        get(name) {
           return request.cookies.get(name)?.value
         },
-        set(name: string, value: string, options: { maxAge?: number; domain?: string; path?: string; sameSite?: string; secure?: boolean }) {
-          request.cookies.set({
-            name,
-            value,
-            ...options,
-          })
+        set(name, value, options) {
+          // This is a safe way to set request cookies by getting all current cookies
+          // and then setting the cookie values including the new one
+          const requestHeaders = new Headers(request.headers)
+          if (request.cookies.get(name)?.value !== value) {
+            requestHeaders.set('cookie', 
+              request.cookies.getAll()
+                .map(cookie => `${cookie.name}=${cookie.value}`)
+                .join('; ') + `; ${name}=${value}`
+            )
+          }
+          
+          // Set cookie in the response
           response = NextResponse.next({
             request: {
-              headers: request.headers,
+              headers: requestHeaders,
             },
           })
+          
+          // We can use the response.cookies.set directly
           response.cookies.set({
             name,
             value,
@@ -35,22 +44,18 @@ export async function updateSession(request: NextRequest) {
             path: options?.path ?? '/',
           })
         },
-        remove(name: string, options: { path?: string; domain?: string }) {
-          request.cookies.set({
-            name,
-            value: '',
-            ...options,
-            maxAge: 0,
-          })
+        remove(name, options) {
+          // Only modify response cookies
           response = NextResponse.next({
             request: {
               headers: request.headers,
             },
           })
+          
+          // For removal, we set an expired cookie
           response.cookies.set({
             name,
             value: '',
-            ...options,
             maxAge: 0,
             path: options?.path ?? '/',
           })
