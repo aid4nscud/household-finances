@@ -2,6 +2,7 @@
 
 import { createClient } from '@/utils/supabase/server'
 import { redirect } from 'next/navigation'
+import { SITE_URL } from '@/lib/constants'
 
 export async function signIn(formData: FormData) {
   const supabase = createClient()
@@ -31,7 +32,7 @@ export async function signUp(formData: FormData) {
     email,
     password,
     options: {
-      emailRedirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}/auth/callback`,
+      emailRedirectTo: `${SITE_URL}/auth/callback`,
     },
   })
   

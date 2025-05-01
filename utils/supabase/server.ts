@@ -1,6 +1,5 @@
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
-import { SUPABASE_URL, SUPABASE_ANON_KEY } from '@/lib/constants'
 
 /**
  * Creates a Supabase client for Server Components, API Routes, and Route Handlers
@@ -9,18 +8,9 @@ import { SUPABASE_URL, SUPABASE_ANON_KEY } from '@/lib/constants'
 export const createClient = () => {
   const cookieStore = cookies()
   
-  // Add debug logging
-  const allCookies = cookieStore.getAll()
-  console.log('[Server] Available cookies:', allCookies.map(c => c.name))
-
-  // Check for PKCE cookie specifically
-  const hasCodeVerifier = allCookies.some(c => 
-    c.name.includes('code-verifier') || c.name.startsWith('sb-'))
-  console.log('[Server] Has code verifier cookie:', hasCodeVerifier)
-  
   return createServerClient(
-    SUPABASE_URL,
-    SUPABASE_ANON_KEY,
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
       auth: {
         flowType: 'pkce',
@@ -28,10 +18,10 @@ export const createClient = () => {
         autoRefreshToken: true
       },
       cookies: {
-        get(name: string) {
+        get(name) {
           return cookieStore.get(name)?.value
         },
-        set(name: string, value: string, options: Record<string, any>) {
+        set(name, value, options) {
           try {
             cookieStore.set({ 
               name, 
@@ -43,10 +33,11 @@ export const createClient = () => {
               httpOnly: true
             })
           } catch (error) {
-            console.error('[Server] Error setting cookie:', error);
+            // This will fail silently during static generation or 
+            // when cookies cannot be modified, which is expected
           }
         },
-        remove(name: string, options: Record<string, any>) {
+        remove(name, options) {
           try {
             cookieStore.set({ 
               name, 
@@ -56,7 +47,8 @@ export const createClient = () => {
               path: '/'
             })
           } catch (error) {
-            console.error('[Server] Error removing cookie:', error);
+            // This will fail silently during static generation or
+            // when cookies cannot be modified, which is expected
           }
         },
       },
