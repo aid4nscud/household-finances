@@ -13,7 +13,7 @@ import {
   FormMessage,
 } from '@/components/ui/form'
 import { createClient } from '@/utils/supabase/client'
-import { SITE_URL } from '@/lib/constants'
+import { REDIRECT_URL } from '@/lib/constants'
 
 // Schema for form validation
 const formSchema = z.object({
@@ -87,9 +87,22 @@ export function MagicLinkForm() {
         }
       });
       
-      // Set up PKCE auth
-      const redirectTo = `${SITE_URL}/auth/callback`;
+      // Set up PKCE auth with dynamic redirect URL
+      const origin = typeof window !== 'undefined' ? window.location.origin : 'http://localhost:3000';
+      const redirectTo = `${origin}/auth/callback`;
+      
+      console.log('[MagicLinkForm] Current origin:', origin);
       console.log('[MagicLinkForm] Redirect URL:', redirectTo);
+      
+      // Make sure cookies are enabled before continuing
+      const testCookie = 'supabase-test-cookie';
+      document.cookie = `${testCookie}=1; path=/; max-age=60`;
+      const cookiesEnabled = document.cookie.indexOf(testCookie) !== -1;
+      
+      if (!cookiesEnabled) {
+        console.error('[MagicLinkForm] Cookies are disabled in this browser');
+        throw new Error('Cookies must be enabled in your browser to sign in');
+      }
       
       const { data, error } = await supabase.auth.signInWithOtp({
         email: values.email,

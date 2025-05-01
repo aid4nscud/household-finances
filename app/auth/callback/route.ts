@@ -5,6 +5,7 @@ import { NextRequest, NextResponse } from 'next/server'
 // after a user signs in with a magic link
 export async function GET(request: NextRequest) {
   console.log('[Auth Callback] Auth callback triggered');
+  console.log('[Auth Callback] Full request URL:', request.url);
 
   // Detect the URL parameters from the callback
   const requestUrl = new URL(request.url)
@@ -13,6 +14,26 @@ export async function GET(request: NextRequest) {
   
   console.log('[Auth Callback] Code present:', !!code);
   console.log('[Auth Callback] Error present:', !!errorDescription);
+
+  // Debug cookies
+  console.log('[Auth Callback] Request cookies:');
+  const cookieHeader = request.headers.get('cookie');
+  if (cookieHeader) {
+    const cookies = cookieHeader.split(';').map(cookie => cookie.trim());
+    cookies.forEach(cookie => {
+      console.log('  - ' + cookie.split('=')[0]);
+    });
+    
+    // Check specifically for code verifier
+    const hasCodeVerifier = cookies.some(cookie => 
+      cookie.startsWith('supabase-auth-token-code-verifier=') || 
+      cookie.startsWith('sb-') || 
+      cookie.includes('code-verifier')
+    );
+    console.log('[Auth Callback] Has code verifier cookie:', hasCodeVerifier);
+  } else {
+    console.log('[Auth Callback] No cookies in request');
+  }
 
   if (errorDescription) {
     console.error('[Auth Callback] Error from auth provider:', errorDescription);
@@ -34,11 +55,19 @@ export async function GET(request: NextRequest) {
     
     // Exchange the code for a session
     console.log('[Auth Callback] Exchanging code for session...');
+    console.log('[Auth Callback] Code value (first 10 chars):', code.substring(0, 10) + '...');
+    
     const { data, error } = await supabase.auth.exchangeCodeForSession(code)
     
     if (error) {
       console.error('[Auth Callback] Error exchanging code:', error.message);
       console.error('[Auth Callback] Error details:', error);
+      
+      // Check for specific PKCE error
+      if (error.message.includes('code verifier')) {
+        console.error('[Auth Callback] This appears to be a PKCE code verifier issue');
+        console.error('[Auth Callback] Make sure the code verifier cookie is being correctly set and passed');
+      }
       
       return NextResponse.redirect(
         new URL(`/sign-in?error=${encodeURIComponent(error.message)}`, request.url)
