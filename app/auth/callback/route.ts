@@ -12,7 +12,14 @@ export async function GET(request: NextRequest) {
   const errorDescription = requestUrl.searchParams.get('error_description')
   
   console.log('[Auth Callback] Code present:', !!code);
-  console.log('[Auth Callback] Error present:', !!errorDescription);
+  
+  // Log all cookies for debugging
+  const cookieHeader = request.headers.get('cookie')
+  console.log('[Auth Callback] Cookie header exists:', !!cookieHeader)
+  if (cookieHeader) {
+    const cookies = cookieHeader.split(';').map(c => c.trim().split('=')[0])
+    console.log('[Auth Callback] Cookies in request:', cookies)
+  }
 
   // Handle error from auth provider
   if (errorDescription) {
@@ -46,7 +53,7 @@ export async function GET(request: NextRequest) {
       if (error.message.includes('code verifier')) {
         console.error('[Auth Callback] PKCE code verifier issue detected');
         
-        // Specific error for PKCE issues
+        // Create a more informative error message
         return NextResponse.redirect(
           new URL(`/sign-in?error=${encodeURIComponent('Authentication error: Code verifier missing. This might be due to cookies being blocked or not persisted properly.')}`, requestUrl.origin)
         )
@@ -61,9 +68,14 @@ export async function GET(request: NextRequest) {
     console.log('[Auth Callback] Successfully exchanged code for session');
     console.log('[Auth Callback] User email:', data.user?.email);
     
-    // Create a response that redirects to the dashboard or home page
-    // Use origin to ensure we're using the correct base URL
+    // Create a response that redirects to the dashboard
     const response = NextResponse.redirect(new URL('/dashboard', requestUrl.origin))
+    
+    // Preserve cookies by copying them from the request
+    if (cookieHeader) {
+      console.log('[Auth Callback] Preserving cookies in response');
+      response.headers.set('cookie', cookieHeader)
+    }
     
     return response
   } catch (error: any) {

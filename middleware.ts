@@ -9,6 +9,13 @@ export async function middleware(request: NextRequest) {
   // Start with logging the request
   console.log(`[Middleware] Request to: ${request.nextUrl.pathname}`)
   
+  // Check for PKCE-related cookies early
+  const cookieHeader = request.headers.get('cookie')
+  const hasPKCECookies = cookieHeader?.includes('code-verifier') || cookieHeader?.includes('sb-')
+  if (hasPKCECookies) {
+    console.log('[Middleware] PKCE cookies detected, preserving for auth flow')
+  }
+  
   try {
     // Create a response object to modify later if needed
     let response = NextResponse.next({
@@ -24,18 +31,28 @@ export async function middleware(request: NextRequest) {
       {
         cookies: {
           get(name) {
-            return request.cookies.get(name)?.value
+            const cookie = request.cookies.get(name)
+            console.log(`[Middleware] Getting cookie: ${name}, exists: ${!!cookie}`)
+            return cookie?.value
           },
           set(name, value, options) {
+            console.log(`[Middleware] Setting cookie: ${name}`)
             request.cookies.set(name, value)
             response = NextResponse.next({
               request: {
                 headers: request.headers,
               },
             })
-            response.cookies.set(name, value, options)
+            // Ensure cookies have path='/' and appropriate security settings
+            response.cookies.set(name, value, {
+              ...options,
+              path: '/',
+              sameSite: 'lax',
+              secure: process.env.NODE_ENV === 'production'
+            })
           },
           remove(name, options) {
+            console.log(`[Middleware] Removing cookie: ${name}`)
             request.cookies.delete(name)
             response = NextResponse.next({
               request: {
@@ -68,8 +85,14 @@ export async function middleware(request: NextRequest) {
     
     if (isAuthCallback) {
       console.log('[Middleware] Allowing auth callback request:', pathname);
-      // Important: For auth callback, we must return the original response
-      // without any modifications to ensure cookies are properly set
+      
+      // Special handling for auth callback to preserve PKCE cookies
+      if (cookieHeader) {
+        console.log('[Middleware] Preserving cookies for auth callback');
+        // We make sure to preserve cookies in the response to maintain PKCE state
+        response.headers.set('cookie', cookieHeader);
+      }
+      
       return response;
     }
     
@@ -102,6 +125,12 @@ export async function middleware(request: NextRequest) {
     if (pathname === '/dashboard/history') {
       url.pathname = '/dashboard/create'
       return NextResponse.redirect(url)
+    }
+    
+    // IMPORTANT: Always preserve cookies in the response to maintain auth state
+    if (cookieHeader) {
+      console.log('[Middleware] Preserving cookies between requests');
+      response.headers.set('cookie', cookieHeader);
     }
     
     return response;

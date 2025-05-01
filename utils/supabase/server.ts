@@ -1,6 +1,5 @@
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
-import { Database } from '@/lib/database.types'
 import { SUPABASE_URL, SUPABASE_ANON_KEY } from '@/lib/constants'
 
 /**
@@ -10,38 +9,57 @@ import { SUPABASE_URL, SUPABASE_ANON_KEY } from '@/lib/constants'
 export const createClient = () => {
   const cookieStore = cookies()
   
-  return createServerClient<Database>(
+  // Add debug logging
+  const allCookies = cookieStore.getAll()
+  console.log('[Server] Available cookies:', allCookies.map(c => c.name))
+
+  // Check for PKCE cookie specifically
+  const hasCodeVerifier = allCookies.some(c => 
+    c.name.includes('code-verifier') || c.name.startsWith('sb-'))
+  console.log('[Server] Has code verifier cookie:', hasCodeVerifier)
+  
+  return createServerClient(
     SUPABASE_URL,
     SUPABASE_ANON_KEY,
     {
       cookies: {
         get(name: string) {
-          console.log('[Server Supabase] Getting cookie:', name);
           const cookie = cookieStore.get(name)
+          console.log(`[Server] Getting cookie: ${name}, exists: ${!!cookie}`)
           return cookie?.value
         },
         set(name: string, value: string, options: Record<string, any>) {
-          console.log('[Server Supabase] Setting cookie:', name);
+          console.log(`[Server] Setting cookie: ${name} with options:`, options)
           try {
-            // Parse options to ensure they're valid
-            const cookieOptions = {
+            cookieStore.set({ 
+              name, 
+              value, 
               ...options,
+              // Critical for Vercel serverless functions
+              path: '/',
+              // Allow cookies to be sent in cross-site requests
+              sameSite: 'lax',
+              // Secure in production
+              secure: process.env.NODE_ENV === 'production',
               // Ensure the cookie is accessible client-side
-              httpOnly: false,
-            }
-            
-            // Set cookie with parsed options
-            cookieStore.set({ name, value, ...cookieOptions })
+              httpOnly: false
+            })
           } catch (error) {
-            console.error('[Server Supabase] Error setting cookie:', error);
+            console.error('[Server] Error setting cookie:', error);
           }
         },
         remove(name: string, options: Record<string, any>) {
-          console.log('[Server Supabase] Removing cookie:', name);
+          console.log(`[Server] Removing cookie: ${name}`)
           try {
-            cookieStore.set({ name, value: '', ...options, maxAge: 0 })
+            cookieStore.set({ 
+              name, 
+              value: '', 
+              ...options, 
+              maxAge: 0,
+              path: '/'
+            })
           } catch (error) {
-            console.error('[Server Supabase] Error removing cookie:', error);
+            console.error('[Server] Error removing cookie:', error);
           }
         },
       },
