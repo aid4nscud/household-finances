@@ -2,6 +2,7 @@ import { createServerClient } from '@supabase/ssr'
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 import { Session } from '@supabase/supabase-js'
+import { SITE_URL } from './lib/constants'
 
 // This middleware refreshes the user's session and checks if they're logged in
 export async function middleware(request: NextRequest) {
@@ -126,26 +127,31 @@ export async function middleware(request: NextRequest) {
     
     // If the route is protected and the user is not logged in, redirect to sign-in
     if (isProtectedRoute && !session) {
-      url.pathname = '/sign-in';
-      return NextResponse.redirect(url);
+      const redirectUrl = new URL('/sign-in', SITE_URL);
+      return NextResponse.redirect(redirectUrl);
     }
     
     // If the user is logged in and trying to access an auth route, redirect to dashboard
     if (isAuthRoute && session) {
-      url.pathname = '/dashboard';
-      return NextResponse.redirect(url);
+      const redirectUrl = new URL('/dashboard', SITE_URL);
+      return NextResponse.redirect(redirectUrl);
     }
     
     // For home page, redirect based on auth status
-    if (pathname === '/' && session) {
-      url.pathname = '/dashboard';
-      return NextResponse.redirect(url);
+    if (pathname === '/') {
+      if (session) {
+        const redirectUrl = new URL('/dashboard', SITE_URL);
+        return NextResponse.redirect(redirectUrl);
+      } else {
+        const redirectUrl = new URL('/sign-in', SITE_URL);
+        return NextResponse.redirect(redirectUrl);
+      }
     }
     
     // Add a specific redirect for the history page
     if (pathname === '/dashboard/history') {
-      url.pathname = '/dashboard/create';
-      return NextResponse.redirect(url);
+      const redirectUrl = new URL('/dashboard/create', SITE_URL);
+      return NextResponse.redirect(redirectUrl);
     }
     
     return response;

@@ -8,6 +8,7 @@ import * as z from 'zod'
 import { createClient } from '@/utils/supabase/client'
 import { useToast } from '@/hooks/use-toast'
 import { isRateLimited } from '@/utils/rate-limit'
+import { REDIRECT_URL } from '@/lib/constants'
 
 import { Button } from '@/components/ui/button'
 import {
@@ -64,15 +65,11 @@ export function AuthForm({ mode = 'signIn' }: AuthFormProps) {
         throw new Error('Too many requests. Please try again later.')
       }
       
-      // Get the current origin for proper redirects
-      const origin = typeof window !== 'undefined' ? window.location.origin : '';
-      const redirectTo = `${origin}/auth/callback`;
-      
       // Handle passwordless authentication with magic link
       const { error } = await supabase.auth.signInWithOtp({
         email: values.email,
         options: {
-          emailRedirectTo: redirectTo,
+          emailRedirectTo: REDIRECT_URL,
           shouldCreateUser: mode === 'signUp', // Only create a new user in signUp mode
         },
       });

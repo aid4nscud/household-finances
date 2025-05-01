@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js'
+import { SESSION_EXPIRY } from './constants'
 
 // Check if Supabase URL and anon key are available
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
@@ -21,15 +22,16 @@ export const supabase = createClient(
       persistSession: true,
       autoRefreshToken: true,
       detectSessionInUrl: true,
-      // Set debug to true to enable detailed logging for auth
-      debug: process.env.NODE_ENV !== 'production',
-      storageKey: 'supabase-auth-token'
+      // Disable debug mode in production to prevent excessive logging
+      debug: false,
+      storageKey: 'supabase-auth-token',
+      flowType: 'pkce'
     },
     global: {
       headers: {
         'x-application-name': 'household-finances',
       },
-    },
+    }
   }
 )
 

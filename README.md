@@ -90,11 +90,65 @@ npm run dev
 
 ## Deployment
 
-Deploy the application using Vercel:
+### Deploying to Vercel
 
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fyourusername%2Fincome-statement-generator)
+1. Push your code to a GitHub repository
 
-Make sure to add all the environment variables in your Vercel project settings.
+2. Visit the [Vercel Dashboard](https://vercel.com/dashboard) and click "New Project"
+
+3. Import your repository and configure the following settings:
+   - Framework Preset: Next.js
+   - Root Directory: `./` (default)
+
+4. Add the following environment variables:
+   ```
+   # Supabase configuration
+   NEXT_PUBLIC_SUPABASE_URL=your-supabase-url
+   NEXT_PUBLIC_SUPABASE_ANON_KEY=your-supabase-anon-key
+   SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
+   
+   # Base URL (will be used for auth redirects)
+   NEXT_PUBLIC_BASE_URL=https://your-vercel-deployment-url.vercel.app
+   ```
+
+5. Click "Deploy"
+
+### Configuring Supabase for Production
+
+1. Go to your Supabase project dashboard
+2. Navigate to Authentication → URL Configuration
+3. Update the Site URL to match your Vercel deployment URL
+4. Add the redirect URL: `https://your-vercel-deployment-url.vercel.app/auth/callback`
+5. Save changes
+
+### Verifying Your Deployment
+
+After deployment:
+1. Test authentication flow by signing in
+2. Verify that redirection works correctly after authentication
+3. Test creating and viewing income statements
+
+### Troubleshooting Deployment Issues
+
+#### Authentication Problems
+- **Redirect Loop**: If you're experiencing redirect loops, verify that your `NEXT_PUBLIC_BASE_URL` is set correctly and matches your actual deployment URL.
+- **Magic Link Not Working**: Check that your Supabase redirect URL is correctly configured in the Supabase dashboard.
+- **Cookie Issues**: Ensure cookies are working on your domain. For custom domains, make sure they're properly set up in Vercel.
+
+#### Environment Variables
+- Make sure all environment variables are properly set in the Vercel dashboard.
+- For local testing of production builds, create a `.env.production.local` file with the same variables.
+- Verify that the `NEXT_PUBLIC_` prefix is used for all client-side variables.
+
+#### Supabase Connection Issues
+- Check that your Supabase project is on a plan that supports your expected traffic.
+- Verify network rules if you're experiencing timeouts or connection issues.
+- Test Supabase connection using the auth debug route: `/auth-debug`
+
+#### Deployment Fails
+- Check Vercel build logs for specific errors.
+- Ensure your Node.js version is compatible (this project requires Node.js 18+).
+- Try increasing build memory limit if you're experiencing out-of-memory errors.
 
 ## License
 
