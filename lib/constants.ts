@@ -5,7 +5,7 @@ export const SITE_URL =
   process.env.NEXT_PUBLIC_BASE_URL || 
   (process.env.NEXT_PUBLIC_VERCEL_URL 
     ? `https://${process.env.NEXT_PUBLIC_VERCEL_URL}` 
-    : 'https://household-finances-f8fl6aog4-aid4nscuds-projects.vercel.app');
+    : 'http://localhost:3000');
 
 // Authentication redirect URLs
 export const REDIRECT_URL = `${SITE_URL}/auth/callback`;
