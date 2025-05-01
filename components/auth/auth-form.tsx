@@ -78,6 +78,9 @@ export function AuthForm({ mode = 'signIn' }: AuthFormProps) {
         throw new Error('Too many requests. Please try again later.')
       }
       
+      // Log the redirect URL for debugging
+      console.log('[AuthForm] Using redirect URL:', REDIRECT_URL);
+      console.log('[AuthForm] Current environment:', process.env.NODE_ENV);
       console.log('[AuthForm] Sending magic link to:', values.email, {
         redirectTo: REDIRECT_URL,
         createUser: mode === 'signUp'
