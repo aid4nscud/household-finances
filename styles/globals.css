@@ -2,15 +2,158 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Global styles */
+html,
+body {
+  padding: 0;
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Oxygen,
+    Ubuntu, Cantarell, Fira Sans, Droid Sans, Helvetica Neue, sans-serif;
+  background-color: #f7f9fc;
+  color: #1a202c;
+}
+
+/* Page container with flexible height */
+.page-container {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+/* Content styling */
+main {
+  flex: 1;
+  padding-bottom: 2rem;
+}
+
+/* Form specific styles */
+.form-input:focus {
+  @apply outline-none ring-2 ring-blue-500;
+}
+
+/* Tooltip styles for form fields */
+.tooltip-text {
+  min-width: 240px;
+  transform: translateY(-50%);
+  z-index: 100;
+}
+
+/* Progress bar animation */
+@keyframes progress {
+  0% {
+    width: 0%;
+  }
+}
+
+/* Optimized loading spinner animation */
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Utility for smooth transitions */
+.transition-all {
+  transition-property: all;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  transition-duration: 150ms;
+}
+
+/* Different tooltip display for mobile */
+@media (max-width: 640px) {
+  .tooltip-text {
+    left: 0;
+    transform: translateY(0);
+    margin-top: 0.5rem;
+    margin-left: 0;
+  }
+}
+
+/* Focus styles for accessibility */
+*:focus-visible {
+  @apply outline-none ring-2 ring-blue-500;
+}
+
+/* Set system dark mode support */
+@media (prefers-color-scheme: dark) {
+  html {
+    color-scheme: dark;
+  }
+}
+
 @layer base {
   body {
-    @apply bg-gray-50 text-gray-900;
+    @apply bg-gray-50 text-gray-900 min-h-screen;
+    text-rendering: optimizeSpeed;
+  }
+
+  html, body {
+    @apply overflow-x-hidden w-full;
+    scroll-behavior: smooth;
+  }
+  
+  /* Set sizing to border-box for all elements */
+  *, *::before, *::after {
+    box-sizing: border-box;
+  }
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 20 14.3% 4.1%;
+    --card: 0 0% 100%;
+    --card-foreground: 20 14.3% 4.1%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 20 14.3% 4.1%;
+    --primary: 24 9.8% 10%;
+    --primary-foreground: 60 9.1% 97.8%;
+    --secondary: 60 4.8% 95.9%;
+    --secondary-foreground: 24 9.8% 10%;
+    --muted: 60 4.8% 95.9%;
+    --muted-foreground: 25 5.3% 44.7%;
+    --accent: 60 4.8% 95.9%;
+    --accent-foreground: 24 9.8% 10%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 60 9.1% 97.8%;
+    --border: 20 5.9% 90%;
+    --input: 20 5.9% 90%;
+    --ring: 20 14.3% 4.1%;
+    --chart-1: 12 76% 61%;
+    --chart-2: 173 58% 39%;
+    --chart-3: 197 37% 24%;
+    --chart-4: 43 74% 66%;
+    --chart-5: 27 87% 67%;
+    --radius: 0.5rem;
+  }
+  .dark {
+    --background: 20 14.3% 4.1%;
+    --foreground: 60 9.1% 97.8%;
+    --card: 20 14.3% 4.1%;
+    --card-foreground: 60 9.1% 97.8%;
+    --popover: 20 14.3% 4.1%;
+    --popover-foreground: 60 9.1% 97.8%;
+    --primary: 60 9.1% 97.8%;
+    --primary-foreground: 24 9.8% 10%;
+    --secondary: 12 6.5% 15.1%;
+    --secondary-foreground: 60 9.1% 97.8%;
+    --muted: 12 6.5% 15.1%;
+    --muted-foreground: 24 5.4% 63.9%;
+    --accent: 12 6.5% 15.1%;
+    --accent-foreground: 60 9.1% 97.8%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 60 9.1% 97.8%;
+    --border: 12 6.5% 15.1%;
+    --input: 12 6.5% 15.1%;
+    --ring: 24 5.7% 82.9%;
+    --chart-1: 220 70% 50%;
+    --chart-2: 160 60% 45%;
+    --chart-3: 30 80% 55%;
+    --chart-4: 280 65% 60%;
+    --chart-5: 340 75% 55%;
   }
 }
 
 @layer components {
   .btn {
-    @apply px-4 py-2 rounded-md font-medium transition duration-150 ease-in-out;
+    @apply px-4 py-2 font-medium transition-colors duration-150 ease-in-out;
   }
   
   .btn-primary {
@@ -18,7 +161,8 @@
   }
   
   .form-input {
-    @apply w-full rounded-md border border-gray-300 shadow-sm py-2 px-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500;
+    @apply w-full border border-gray-300 shadow-sm py-2 px-3 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500;
+    will-change: border-color, box-shadow;
   }
   
   .form-label {
@@ -26,6 +170,181 @@
   }
   
   .form-group {
-    @apply mb-4;
+    @apply mb-5;
   }
+  
+  /* Traditional UI Card Styles */
+  .form-card {
+    @apply bg-white border border-gray-200 shadow-sm p-5 transition-colors duration-300;
+  }
+
+  .input-with-icon {
+    @apply relative;
+  }
+  
+  .input-with-icon input {
+    @apply pl-9;
+  }
+  
+  .input-with-icon .icon {
+    @apply absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400;
+    /* Prevent layout shifts */
+    height: 1em;
+    width: 1em;
+  }
+  
+  .tooltip {
+    @apply relative inline-block cursor-help;
+  }
+  
+  .tooltip .tooltip-text {
+    @apply invisible absolute z-10 w-64 bg-gray-800 text-white text-xs p-2 
+           opacity-0 transition-opacity duration-300 ease-in-out transform -translate-x-1/2 left-1/2 bottom-full mb-1 pointer-events-none;
+    will-change: opacity;
+  }
+  
+  .tooltip:hover .tooltip-text {
+    @apply visible opacity-100;
+  }
+  
+  /* Add a little triangle/arrow to the tooltip */
+  .tooltip .tooltip-text::after {
+    @apply absolute top-full left-1/2 transform -translate-x-1/2 border-4 border-transparent border-t-gray-800;
+    content: "";
+  }
+
+  /* Full-width layout styles */
+  .full-width-container {
+    @apply w-full max-w-[1440px] mx-auto;
+  }
+  
+  .main-content {
+    @apply flex-grow w-full;
+  }
+}
+
+/* Animations with hardware acceleration */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px) translateZ(0); }
+  to { opacity: 1; transform: translateY(0) translateZ(0); }
+}
+
+@keyframes slideIn {
+  from { transform: translateX(20px) translateZ(0); opacity: 0; }
+  to { transform: translateX(0) translateZ(0); opacity: 1; }
+}
+
+.animate-fadeIn {
+  animation: fadeIn 0.3s ease-out forwards;
+  will-change: opacity, transform;
+  backface-visibility: hidden;
+}
+
+.animate-slideIn {
+  animation: slideIn 0.3s ease-out forwards;
+  will-change: opacity, transform;
+  backface-visibility: hidden;
+}
+
+/* Mobile-friendly transitions and animations */
+@media (max-width: 768px) {
+  .form-group {
+    @apply mb-5;
+  }
+  
+  .input-with-icon .icon {
+    @apply text-sm;
+  }
+  
+  /* Reduce animations on mobile for better performance */
+  .animate-fadeIn,
+  .animate-slideIn {
+    animation-duration: 0.2s;
+  }
+}
+
+/* Focus and hover effects for inputs */
+.form-input:not(:disabled):hover {
+  @apply border-gray-400;
+}
+
+.form-input:not(:disabled):focus {
+  @apply border-blue-500 ring-blue-500;
+}
+
+/* Make form transitions smoother with reduced properties */
+.form-input {
+  @apply transition-all duration-150;
+}
+
+.btn {
+  @apply transition-all duration-150;
+}
+
+/* Traditional card style */
+.card {
+  @apply bg-white border border-gray-200 shadow-sm;
+}
+
+/* Loading animation */
+.dot-loading {
+  @apply inline-flex items-center justify-center h-5;
+}
+
+.dot-loading span {
+  @apply w-1.5 h-1.5 rounded-full bg-current mx-0.5 inline-block;
+  animation: dotPulse 1.4s infinite ease-in-out both;
+  will-change: transform;
+}
+
+.dot-loading span:nth-child(1) {
+  animation-delay: 0s;
+}
+
+.dot-loading span:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.dot-loading span:nth-child(3) {
+  animation-delay: 0.4s;
+}
+
+@keyframes dotPulse {
+  0%, 80%, 100% { transform: scale(0) translateZ(0); }
+  40% { transform: scale(1) translateZ(0); }
+}
+
+/* Responsive layout classes */
+.responsive-grid {
+  @apply grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4;
+}
+
+.responsive-form-grid {
+  @apply grid grid-cols-1 gap-5 md:grid-cols-2;
+}
+
+/* Helper styles for full-height sections */
+.full-height-section {
+  @apply min-h-[calc(100vh-6rem)];
+}
+
+/* Improved form container style */
+.form-container {
+  @apply w-full max-w-6xl mx-auto;
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+.bg-grid-pattern {
+  background-image: 
+    linear-gradient(to right, rgba(176, 176, 176, 0.1) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(176, 176, 176, 0.1) 1px, transparent 1px);
+  background-size: 40px 40px;
 } 

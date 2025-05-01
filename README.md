@@ -1,75 +1,111 @@
-# Household Finances App
+# Income Statement Generator
 
-A Next.js web application that allows users to input their household financial information, generates personalized financial insights, and emails the report to the user.
+A web application for generating personalized income statements to better understand your finances. Built with Next.js, TypeScript, Tailwind CSS, and Supabase.
 
 ## Features
 
-- Dynamic form with validation
-- Financial report generation with personalized insights
-- Styled HTML email delivery
-- Responsive UI with Tailwind CSS
-- Real-time feedback on form submission
+- User authentication with email magic links (OTP)
+- Create personalized income statements
+- View and analyze financial data with the 50/30/20 rule
+- Store and view history of past statements
+- Export statements to Excel
+- Email statements to users
+- Responsive design that works on all devices
 
 ## Tech Stack
 
-- Next.js (JavaScript)
-- Tailwind CSS
-- Nodemailer (for email functionality)
-- Gmail for email delivery
+- **Frontend:** Next.js 14, React, TypeScript, Tailwind CSS
+- **UI Components:** Shadcn UI, Radix UI
+- **Authentication:** Supabase Auth
+- **Database:** Supabase PostgreSQL
+- **Email:** Nodemailer
+- **Styling:** Tailwind CSS
+- **Form Validation:** Zod, React Hook Form
 
-## Installation
+## Getting Started
 
-1. Clone the repository:
-```bash
-git clone <repository-url>
-cd household-finances
+### Prerequisites
+
+- Node.js 18+ installed
+- A Supabase account and project
+- Email service credentials (for sending statements)
+
+### Environment Setup
+
+Create a `.env.local` file in the root directory with the following variables:
+
+```
+# Supabase configuration
+NEXT_PUBLIC_SUPABASE_URL=your-supabase-url
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your-supabase-anon-key
+SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
+
+# Email configuration
+EMAIL_HOST=your-email-host
+EMAIL_PORT=587
+EMAIL_USERNAME=your-email-username
+EMAIL_PASSWORD=your-email-password
+EMAIL_FROM=your-email-from
 ```
 
-2. Install dependencies:
+### Supabase Setup
+
+1. Create a new Supabase project
+2. Set up email authentication with magic links
+3. Create the following tables:
+
+```sql
+-- Income statements table
+CREATE TABLE income_statements (
+  id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+  user_id UUID REFERENCES auth.users NOT NULL,
+  user_name TEXT NOT NULL,
+  user_email TEXT NOT NULL,
+  statement_data JSONB NOT NULL,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT now()
+);
+
+-- Set up Row Level Security
+ALTER TABLE income_statements ENABLE ROW LEVEL SECURITY;
+
+-- Create policy to allow users to only see their own statements
+CREATE POLICY "Users can view their own statements"
+  ON income_statements
+  FOR SELECT
+  USING (auth.uid() = user_id);
+
+-- Create policy to allow users to insert their own statements
+CREATE POLICY "Users can insert their own statements"
+  ON income_statements
+  FOR INSERT
+  WITH CHECK (auth.uid() = user_id);
+```
+
+### Installation
+
+1. Clone the repository
+2. Install dependencies
+
 ```bash
 npm install
 ```
 
-3. Create a `.env.local` file in the root directory with the following variables:
-```
-EMAIL_USER=your.email@gmail.com
-EMAIL_PASS=your-app-password
-```
-
-Note: You need to create an App Password for your Gmail account. Visit https://myaccount.google.com/apppasswords to generate one.
-
-## Running the Application
-
-To run the development server:
+3. Run the development server
 
 ```bash
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) in your browser to see the application.
+4. Open [http://localhost:3000](http://localhost:3000) in your browser
 
-## Build for Production
+## Deployment
 
-To build the application for production:
+Deploy the application using Vercel:
 
-```bash
-npm run build
-```
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fyourusername%2Fincome-statement-generator)
 
-To start the production server:
-
-```bash
-npm start
-```
-
-## Application Structure
-
-- `components/DynamicForm.js` - The form component with all input fields and validation
-- `utils/calculateReport.js` - Calculates financial insights based on user inputs
-- `utils/emailTemplate.js` - Generates a styled HTML template for the email
-- `pages/index.js` - Main page that renders the form and processes form submission
-- `pages/api/send-report.js` - API endpoint to handle sending emails with Nodemailer
+Make sure to add all the environment variables in your Vercel project settings.
 
 ## License
 
-[MIT](LICENSE) 
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details. 
