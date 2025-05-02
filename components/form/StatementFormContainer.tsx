@@ -10,6 +10,7 @@ import { Card, CardContent } from '@/components/ui/card'
 import { FormError } from '@/components/ui/form-error'
 import { Badge, PenLine } from 'lucide-react'
 import { createClient } from '@/utils/supabase/client'
+import { useAuth } from '@/components/auth/auth-provider'
 
 export function StatementFormContainer({ 
   initialEmail,
@@ -23,6 +24,7 @@ export function StatementFormContainer({
   const { createStatement, updateStatement } = useStatements()
   const { toast } = useToast()
   const [formError, setFormError] = useState<string | null>(null)
+  const { session: authSession, user: authUser } = useAuth()
   
   const isEditMode = !!existingStatement
 
@@ -32,13 +34,24 @@ export function StatementFormContainer({
     setFormError(null);
     
     try {
-      // First verify authentication status
-      const supabase = createClient()
-      const { data: { session }, error: sessionError } = await supabase.auth.getSession()
-      
-      if (sessionError || !session) {
-        console.error('Authentication error before statement submission:', sessionError);
-        throw new Error('Authentication error: You must be logged in to submit a statement.');
+      // Verify authentication status via the AuthProvider context
+      if (!authSession || !authUser) {
+        console.error('No authenticated user found from AuthProvider');
+        
+        // Try to get a fresh session directly
+        const supabase = createClient();
+        const { data: freshSession, error: sessionError } = await supabase.auth.getSession();
+        
+        if (sessionError || !freshSession.session) {
+          console.error('Authentication error before statement submission:', sessionError || 'No session available');
+          console.log('Auth state:', { authSession: !!authSession, authUser: !!authUser, freshSession: !!freshSession.session });
+          throw new Error('Authentication error: You must be logged in to submit a statement.');
+        } else {
+          console.log('Successfully retrieved fresh session for user:', freshSession.session.user.email);
+          // Continue with the fresh session - no need to throw error
+        }
+      } else {
+        console.log('Using existing authenticated session for user:', authUser.email);
       }
       
       // Delay to ensure the loading state is visible

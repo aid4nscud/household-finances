@@ -19,16 +19,54 @@ export function createClient() {
   
   console.log(`[Client ${clientId}] Creating Supabase client, browser: ${isBrowser}, host: ${currentUrl}`);
   
+  // Browser-specific auth settings
+  const authSettings = {
+    flowType: 'pkce' as const,
+    persistSession: true,
+    detectSessionInUrl: true,
+    autoRefreshToken: true,
+    // Storage settings for more reliable session persistence
+    storage: isBrowser ? {
+      getItem: (key: string) => {
+        try {
+          // Try localStorage first (default)
+          const value = localStorage.getItem(key);
+          if (value) {
+            return value;
+          }
+          
+          // Fall back to sessionStorage
+          return sessionStorage.getItem(key);
+        } catch (e) {
+          console.error(`[Client ${clientId}] Storage error:`, e);
+          return null;
+        }
+      },
+      setItem: (key: string, value: string) => {
+        try {
+          // Store in both localStorage and sessionStorage for redundancy
+          localStorage.setItem(key, value);
+          sessionStorage.setItem(key, value);
+        } catch (e) {
+          console.error(`[Client ${clientId}] Storage error:`, e);
+        }
+      },
+      removeItem: (key: string) => {
+        try {
+          localStorage.removeItem(key);
+          sessionStorage.removeItem(key);
+        } catch (e) {
+          console.error(`[Client ${clientId}] Storage error:`, e);
+        }
+      }
+    } : undefined
+  };
+  
   return createBrowserClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
-      auth: {
-        flowType: 'pkce',
-        persistSession: true,
-        detectSessionInUrl: true,
-        autoRefreshToken: true
-      },
+      auth: authSettings,
       global: {
         headers: {
           'x-client-id': clientId

@@ -159,17 +159,26 @@ export function useStatements() {
 
     try {
       // Check authentication before proceeding
-      const { data: authData, error: authError } = await supabase.auth.getUser()
+      const { data: authData, error: authError } = await supabase.auth.getSession()
       
-      if (authError || !authData.user) {
+      if (authError) {
+        console.error('Auth error details in getLatestStatement:', authError)
+        throw new Error('Authentication error: ' + authError.message)
+      }
+      
+      if (!authData.session || !authData.session.user) {
+        console.error('No valid session found in getLatestStatement', authData)
         throw new Error('You must be logged in to retrieve a statement.')
       }
+      
+      const userId = authData.session.user.id
+      console.log('Getting latest statement for user ID:', userId)
       
       // Get the most recent statement
       const { data, error } = await supabase
         .from('income_statements')
         .select('*')
-        .eq('user_id', authData.user.id)
+        .eq('user_id', userId)
         .order('created_at', { ascending: false })
         .limit(1)
         .single()
