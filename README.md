@@ -20,6 +20,36 @@ A web application for generating personalized income statements to better unders
 - **Styling:** Tailwind CSS
 - **Form Validation:** Zod, React Hook Form
 
+## Authentication Architecture
+
+### Middleware Implementation
+
+This project follows Supabase's recommended approach for authentication with Next.js App Router:
+
+1. **Simple Middleware**: We use the standard middleware approach recommended by Supabase, which focuses solely on refreshing the authentication session and managing cookies:
+
+```typescript
+// middleware.ts
+import { type NextRequest } from 'next/server'
+import { updateSession } from './utils/supabase/middleware'
+
+export async function middleware(request: NextRequest) {
+  return await updateSession(request)
+}
+```
+
+2. **Route Protection**: We protect routes at the page/layout level rather than in middleware:
+   - `(main)` layout checks for authentication and redirects unauthenticated users to sign-in
+   - Authentication pages redirect authenticated users to the dashboard
+
+This approach simplifies the codebase and aligns with Supabase's best practices, ensuring easier maintenance and compatibility with Supabase updates.
+
+### User Authentication Flow
+
+1. **Sign-in/Sign-up**: User authenticates through the auth pages
+2. **Session Refresh**: Middleware handles session cookie refresh automatically
+3. **Route Access**: Protected routes check for valid authentication before rendering
+
 ## Getting Started
 
 ### Prerequisites

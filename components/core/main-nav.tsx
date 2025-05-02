@@ -27,11 +27,13 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { createClient } from "@/utils/supabase/client"
 import { Menu } from "lucide-react"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
+import { useAuth } from '@/components/auth/auth-provider'
 
 export default function MainNav({ session }: { session: Session | null }) {
   const [user, setUser] = useState<any>(null)
   const pathname = usePathname()
   const supabase = createClient()
+  const { signOut } = useAuth()
 
   useEffect(() => {
     if (session) {
@@ -40,75 +42,11 @@ export default function MainNav({ session }: { session: Session | null }) {
   }, [session])
 
   async function handleSignOut() {
+    console.log('[MainNav] Signing out...');
     try {
-      console.log('[MainNav] Starting sign out process');
-      
-      // Clear all possible auth cookies, including both Supabase and Clerk
-      const cookiesToClear = [
-        // Supabase cookies
-        'sb-access-token',
-        'sb-refresh-token', 
-        'sb-auth-token',
-        'supabase-auth-token',
-        'supabase-auth-token-code-verifier',
-        // Clerk cookies
-        '__clerk_db_jwt',
-        '__clerk_db_jwt_YqB7Y3Gz',
-        '__client_uat',
-        '__client_uat_YqB7Y3Gz'
-      ];
-      
-      // Add project-specific Supabase cookies
-      if (typeof window !== 'undefined') {
-        // Find and clear any Supabase project-specific cookies
-        document.cookie.split('; ').forEach(cookie => {
-          const [name] = cookie.split('=');
-          if (name.includes('-auth-token') || name.startsWith('sb-')) {
-            cookiesToClear.push(name);
-          }
-        });
-      }
-      
-      // Clear all cookies with various path and domain combinations
-      cookiesToClear.forEach(cookieName => {
-        // Standard cookie clear
-        document.cookie = `${cookieName}=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT`;
-        // Without security attributes
-        document.cookie = `${cookieName}=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; secure=false; samesite=lax`;
-        // Try with an empty path
-        document.cookie = `${cookieName}=; expires=Thu, 01 Jan 1970 00:00:00 GMT`;
-        
-        // Try with domain specification for production environments
-        const domain = window.location.hostname;
-        document.cookie = `${cookieName}=; path=/; domain=${domain}; expires=Thu, 01 Jan 1970 00:00:00 GMT`;
-        
-        // For production domains, also try with leading dot for subdomains
-        if (domain !== 'localhost') {
-          const rootDomain = domain.split('.').slice(-2).join('.');
-          document.cookie = `${cookieName}=; path=/; domain=.${rootDomain}; expires=Thu, 01 Jan 1970 00:00:00 GMT`;
-        }
-      });
-      
-      // Then sign out via Supabase Auth API
-      console.log('[MainNav] Calling Supabase signOut API');
-      const { error } = await supabase.auth.signOut();
-      
-      if (error) {
-        console.error("[MainNav] Sign out API error:", error);
-        throw error;
-      }
-      
-      console.log('[MainNav] Sign out successful, redirecting to sign-in page');
-      
-      // Force a full page reload to ensure complete state reset
-      window.location.href = '/sign-in';
+      await signOut();
     } catch (e) {
       console.error("[MainNav] Sign out error:", e);
-      
-      // Even if there's an error, try to redirect to sign-in
-      setTimeout(() => {
-        window.location.href = '/sign-in';
-      }, 500);
     }
   }
 
@@ -216,37 +154,76 @@ export default function MainNav({ session }: { session: Session | null }) {
               ) : (
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" className="relative h-10 w-10 rounded-full">
-                      <Avatar className="h-9 w-9">
+                    <Button 
+                      variant="ghost" 
+                      className="relative h-10 w-10 rounded-full border-2 border-transparent hover:border-primary/20 transition-all duration-200 overflow-hidden group"
+                    >
+                      <Avatar className="h-9 w-9 group-hover:scale-105 transition-transform duration-200">
                         <AvatarImage 
                           src={user?.user_metadata?.avatar_url || ""} 
                           alt={user?.email || "user"} 
                         />
-                        <AvatarFallback>
+                        <AvatarFallback className="bg-gradient-to-br from-primary/80 to-primary/40 text-primary-foreground font-medium">
                           {user?.email ? user.email.charAt(0).toUpperCase() : "U"}
                         </AvatarFallback>
                       </Avatar>
+                      <span className="absolute inset-0 rounded-full bg-primary/10 opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
                     </Button>
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent className="w-56" align="end" forceMount>
-                    <DropdownMenuLabel>
-                      <div className="flex flex-col space-y-1">
-                        <p className="text-sm font-medium leading-none">
-                          {user?.user_metadata?.full_name || user?.email || "User"}
+                  <DropdownMenuContent 
+                    className="w-64 p-3" 
+                    align="end" 
+                    forceMount
+                    sideOffset={8}
+                  >
+                    <div className="flex items-center gap-3 pb-2">
+                      <Avatar className="h-11 w-11 border-2 border-primary/20">
+                        <AvatarImage 
+                          src={user?.user_metadata?.avatar_url || ""} 
+                          alt={user?.email || "user"} 
+                        />
+                        <AvatarFallback className="bg-gradient-to-br from-primary/80 to-primary/40 text-primary-foreground font-medium text-lg">
+                          {user?.email ? user.email.charAt(0).toUpperCase() : "U"}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="flex flex-col">
+                        <p className="text-sm font-semibold leading-none">
+                          {user?.user_metadata?.full_name || user?.email?.split('@')[0] || "User"}
                         </p>
-                        <p className="text-xs leading-none text-muted-foreground">
+                        <p className="text-xs leading-none text-muted-foreground mt-1.5 max-w-[160px] truncate">
                           {user?.email}
                         </p>
+                        <div className="mt-2 flex gap-1.5">
+                          <span className="px-2 py-0.5 rounded-full bg-primary/10 text-primary text-xs font-medium">
+                            Member
+                          </span>
+                        </div>
                       </div>
-                    </DropdownMenuLabel>
-                    <DropdownMenuSeparator />
-                    <Link href="/dashboard">
-                      <DropdownMenuItem className="cursor-pointer">
-                        Dashboard
-                      </DropdownMenuItem>
-                    </Link>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem onClick={handleSignOut} className="cursor-pointer">
+                    </div>
+                    <DropdownMenuSeparator className="my-2" />
+                    <div className="space-y-1 py-1">
+                      <Link href="/dashboard">
+                        <DropdownMenuItem className="cursor-pointer flex items-center gap-2 py-2 px-3 rounded-md transition-colors hover:bg-primary/5">
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <rect width="7" height="9" x="3" y="3" rx="1" />
+                            <rect width="7" height="5" x="14" y="3" rx="1" />
+                            <rect width="7" height="9" x="14" y="12" rx="1" />
+                            <rect width="7" height="5" x="3" y="16" rx="1" />
+                          </svg>
+                          Dashboard
+                        </DropdownMenuItem>
+                      </Link>
+                    </div>
+                    <DropdownMenuSeparator className="my-2" />
+                    <DropdownMenuItem 
+                      onClick={handleSignOut} 
+                      className="cursor-pointer flex items-center gap-2 py-2 px-3 rounded-md transition-colors hover:bg-red-50 text-red-600 hover:text-red-700"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+                        <polyline points="16 17 21 12 16 7" />
+                        <line x1="21" x2="9" y1="12" y2="12" />
+                      </svg>
                       Sign Out
                     </DropdownMenuItem>
                   </DropdownMenuContent>

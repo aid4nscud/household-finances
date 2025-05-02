@@ -24,7 +24,7 @@ export function StatementFormContainer({
   const { createStatement, updateStatement } = useStatements()
   const { toast } = useToast()
   const [formError, setFormError] = useState<string | null>(null)
-  const { session: authSession, user: authUser } = useAuth()
+  const { session: authSession, user: authUser, refreshSession } = useAuth()
   
   const isEditMode = !!existingStatement
 
@@ -34,37 +34,49 @@ export function StatementFormContainer({
     setFormError(null);
     
     try {
+      // First, retrieve the current session state
+      let currentUser = authUser;
+      let currentSession = authSession;
+      
       // Verify authentication status via the AuthProvider context
-      if (!authSession || !authUser) {
-        console.error('No authenticated user found from AuthProvider');
+      if (!currentSession || !currentUser) {
+        console.log('No authenticated user found in initial check, attempting to refresh session');
         
-        // Try to get a fresh session directly
-        const supabase = createClient();
-        const { data: freshSession, error: sessionError } = await supabase.auth.getSession();
-        
-        if (sessionError || !freshSession.session) {
-          console.error('Authentication error before statement submission:', sessionError || 'No session available');
-          console.log('Auth state:', { authSession: !!authSession, authUser: !!authUser, freshSession: !!freshSession.session });
+        // Try to refresh the session proactively - this is essential for form submissions
+        try {
+          const refreshedSession = await refreshSession();
           
-          // Redirect to sign-in
+          if (refreshedSession) {
+            console.log('Successfully refreshed session for user:', refreshedSession.user.email);
+            currentSession = refreshedSession;
+            currentUser = refreshedSession.user;
+          } else {
+            throw new Error('Session refresh failed');
+          }
+        } catch (refreshError) {
+          console.error('Authentication failed after refresh attempt:', refreshError);
+          
+          // Show a user-friendly error message
           toast({
             title: "Session Expired",
-            description: "Your session has expired. Please sign in again.",
+            description: "Your session has expired. Please sign in again to continue.",
             variant: "destructive",
             duration: 5000,
           });
           
-          setTimeout(() => {
-            router.push('/sign-in');
-          }, 1500);
+          // Short delay before redirect
+          await new Promise(resolve => setTimeout(resolve, 1500));
+          router.push('/sign-in');
           
           throw new Error('Authentication error: You must be logged in to submit a statement.');
-        } else {
-          console.log('Successfully retrieved fresh session for user:', freshSession.session.user.email);
-          // Continue with the fresh session - no need to throw error
         }
       } else {
-        console.log('Using existing authenticated session for user:', authUser.email);
+        console.log('Using existing authenticated session for user:', currentUser.email);
+      }
+      
+      // At this point we should have a valid session
+      if (!currentSession) {
+        throw new Error('Unable to establish a valid authentication session');
       }
       
       // Delay to ensure the loading state is visible

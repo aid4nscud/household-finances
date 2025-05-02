@@ -45,6 +45,14 @@ export async function signUp(formData: FormData) {
 
 export async function signOut() {
   const supabase = createClient()
-  await supabase.auth.signOut()
+  
+  // Make sure to clear cookies server-side
+  const { error } = await supabase.auth.signOut();
+  
+  if (error) {
+    console.error('Server action sign-out error:', error);
+  }
+  
+  // Redirect to home page even if there's an error
   return redirect('/')
 } 

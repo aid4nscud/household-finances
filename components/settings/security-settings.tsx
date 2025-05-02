@@ -6,6 +6,10 @@ import { Button } from '@/components/ui/button'
 import { useToast } from '@/hooks/use-toast'
 import { supabase } from '@/lib/supabase'
 import { useRouter } from 'next/navigation'
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
+import { Shield, LogOut } from 'lucide-react'
+import { createClient } from '@/utils/supabase/client'
+import { useAuth } from '@/components/auth/auth-provider'
 
 interface SecuritySettingsProps {
   user: User
@@ -16,6 +20,7 @@ export default function SecuritySettings({ user }: SecuritySettingsProps) {
   const [isLoadingSignOut, setIsLoadingSignOut] = useState(false)
   const { toast } = useToast()
   const router = useRouter()
+  const { signOut } = useAuth()
 
   const handleSendPasswordReset = async () => {
     try {
@@ -45,22 +50,13 @@ export default function SecuritySettings({ user }: SecuritySettingsProps) {
   const handleSignOut = async () => {
     try {
       setIsLoadingSignOut(true)
-      
-      const { error } = await supabase.auth.signOut()
-      
-      if (error) throw error
-      
-      toast({
-        title: 'Signed out',
-        description: 'You have been successfully signed out.'
-      })
-      
-      router.push('/sign-in')
+      await signOut()
     } catch (error) {
+      console.error('Error signing out:', error)
       toast({
         title: 'Error',
-        description: error instanceof Error ? error.message : 'Failed to sign out',
-        variant: 'destructive'
+        description: 'Something went wrong while signing out. Please try again.',
+        variant: 'destructive',
       })
     } finally {
       setIsLoadingSignOut(false)

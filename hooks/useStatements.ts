@@ -1,44 +1,36 @@
 'use client'
 
 import { useState } from 'react'
-import { useToast } from './use-toast'
+import { toast } from '@/components/ui/use-toast'
 import { createClient } from '@/utils/supabase/client'
 import { useRouter } from 'next/navigation'
+import { useAuth } from '@/components/auth/auth-provider'
+import { useToast } from '@/components/ui/use-toast'
+
+// Create a singleton Supabase client instance
+const supabase = createClient()
+
+// Function to get an authenticated session with error handling
+async function getAuthenticatedSession() {
+  try {
+    const { data, error } = await supabase.auth.getSession()
+    if (error) return { session: null, error }
+    return { session: data.session, error: null }
+  } catch (error) {
+    console.error('Error getting session:', error)
+    return { 
+      session: null, 
+      error: new Error(error instanceof Error ? error.message : 'Unknown authentication error') 
+    }
+  }
+}
 
 export function useStatements() {
   const [isLoading, setIsLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+  const [error, setError] = useState<Error | null>(null)
   const { toast } = useToast()
-  const supabase = createClient()
   const router = useRouter()
-
-  // Helper function to get authenticated session with retry
-  const getAuthenticatedSession = async () => {
-    // First attempt
-    const { data: authData, error: authError } = await supabase.auth.getSession()
-    
-    if (!authError && authData.session && authData.session.user) {
-      return { session: authData.session, error: null }
-    }
-    
-    console.log('Initial session check failed, attempting to refresh...', authError || 'No session found')
-    
-    // Try to refresh the session
-    const { data: refreshData, error: refreshError } = await supabase.auth.refreshSession()
-    
-    if (!refreshError && refreshData.session && refreshData.session.user) {
-      console.log('Session successfully refreshed')
-      return { session: refreshData.session, error: null }
-    }
-    
-    console.error('Session refresh failed:', refreshError || 'No session after refresh')
-    
-    // Final error - no valid session
-    return { 
-      session: null, 
-      error: authError || refreshError || new Error('No valid authentication session found') 
-    }
-  }
+  const { refreshSession } = useAuth()
 
   // Create a new income statement
   const createStatement = async (statementData: any) => {
@@ -52,7 +44,49 @@ export function useStatements() {
       if (authError) {
         console.error('Authentication error details:', authError)
         
-        // Redirect to sign-in if authentication fails
+        // Try to refresh the session using auth context
+        try {
+          console.log('Attempting to refresh session via AuthProvider...')
+          const refreshedSession = await refreshSession()
+          
+          if (refreshedSession) {
+            console.log('Successfully refreshed session via AuthProvider')
+            // Continue with the refreshed session
+            const userId = refreshedSession.user.id
+            
+            // Insert the data
+            const { data: insertData, error: insertError } = await supabase
+              .from('income_statements')
+              .insert({
+                user_id: userId,
+                statement_data: statementData
+              })
+              .select('id')
+              .single()
+            
+            if (insertError) {
+              throw new Error(`Database error: ${insertError.message}`)
+            }
+            
+            if (!insertData || !insertData.id) {
+              throw new Error('Failed to create statement: No ID returned from database')
+            }
+            
+            toast({
+              title: "Success!",
+              description: "Your income statement has been created successfully.",
+              variant: "default",
+              duration: 5000,
+            })
+            
+            setIsLoading(false)
+            return insertData.id
+          }
+        } catch (refreshErr) {
+          console.error('AuthProvider refresh attempt failed:', refreshErr)
+        }
+        
+        // If we reach here, the refresh failed
         toast({
           title: "Session Expired",
           description: "Your session has expired. Please sign in again.",
@@ -60,7 +94,11 @@ export function useStatements() {
           duration: 5000,
         })
         
-        // Let the component handle the redirect to avoid navigation during rendering
+        // Navigate to sign-in
+        setTimeout(() => {
+          router.push('/sign-in')
+        }, 1000)
+        
         throw new Error('Authentication error: ' + authError.message)
       }
       
@@ -83,12 +121,11 @@ export function useStatements() {
         .single()
       
       if (error) {
-        console.error('Supabase error details:', error)
-        throw new Error(`Database error: ${error.message || 'Unknown database error. Please try again later.'}`)
+        console.error('Database error while creating statement:', error)
+        throw new Error(`Database error: ${error.message}`)
       }
       
       if (!data || !data.id) {
-        console.error('No data returned from insertion')
         throw new Error('Failed to create statement: No ID returned from database')
       }
       
@@ -99,24 +136,27 @@ export function useStatements() {
         duration: 5000,
       })
       
+      setIsLoading(false)
       return data.id
     } catch (err) {
-      console.error('Statement creation error:', err)
+      console.error('Error in createStatement:', err)
+      setIsLoading(false)
+      
       const errorMessage = err instanceof Error 
         ? err.message 
         : 'An unknown error occurred while creating your statement'
-      setError(errorMessage)
+      setError(new Error(errorMessage))
       
-      toast({
-        title: "Error",
-        description: errorMessage,
-        variant: "destructive",
-        duration: 7000,
-      })
+      if (!errorMessage.includes('Authentication error')) {
+        toast({
+          title: "Error",
+          description: errorMessage,
+          variant: "destructive",
+          duration: 5000,
+        })
+      }
       
       return null
-    } finally {
-      setIsLoading(false)
     }
   }
 
@@ -186,7 +226,7 @@ export function useStatements() {
       const errorMessage = err instanceof Error 
         ? err.message 
         : 'An unknown error occurred while updating your statement'
-      setError(errorMessage)
+      setError(new Error(errorMessage))
       
       toast({
         title: "Error",
@@ -250,7 +290,7 @@ export function useStatements() {
       const errorMessage = err instanceof Error 
         ? err.message 
         : 'An unknown error occurred while retrieving your statement'
-      setError(errorMessage)
+      setError(new Error(errorMessage))
       
       return null
     } finally {
@@ -286,7 +326,7 @@ export function useStatements() {
       return true
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred'
-      setError(errorMessage)
+      setError(new Error(errorMessage))
       
       toast({
         title: "Error",

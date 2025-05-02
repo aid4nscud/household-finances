@@ -2,108 +2,104 @@ import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
 export async function updateSession(request: NextRequest) {
-  // Create an unmodified response
-  let response = NextResponse.next({
+  // Create a response object that we'll modify and return
+  const response = NextResponse.next({
     request: {
       headers: request.headers,
     },
-  })
+  });
 
-  // For debugging, log PKCE cookies
-  const cookieHeader = request.headers.get('cookie')
-  if (cookieHeader) {
-    const hasPKCECookie = cookieHeader.includes('code-verifier') || 
-                         cookieHeader.includes('sb-');
-    
-    // Only log in non-production environments
-    if (process.env.NODE_ENV !== 'production' && hasPKCECookie) {
-      const cookies = cookieHeader.split(';')
-        .map(c => c.trim().split('=')[0])
-        .filter(c => c.includes('code-verifier') || c.startsWith('sb-'));
-      
-      console.log('[Middleware Helper] PKCE cookies present:', cookies);
-    }
-  }
+  // Get the hostname for domain-specific cookie settings
+  const hostname = request.headers.get('host') || '';
+  const isLocalhost = hostname.includes('localhost') || hostname.includes('127.0.0.1');
 
+  // Improved cookie options for better persistence
+  const cookieOptions = {
+    path: '/',
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'lax' as const,
+    httpOnly: true,
+    maxAge: 60 * 60 * 24 * 7, // 1 week
+  };
+
+  // Create a Supabase client using the request cookies
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
+      auth: {
+        flowType: 'pkce',
+        persistSession: true,
+        autoRefreshToken: true,
+        detectSessionInUrl: false // This should only be true on the client
+      },
       cookies: {
         get(name) {
-          const cookie = request.cookies.get(name)
-          // Log PKCE cookies for debugging in non-production
-          if (process.env.NODE_ENV !== 'production' && 
-             (name.includes('code-verifier') || name.startsWith('sb-'))) {
-            console.log(`[Middleware Helper] Getting cookie: ${name}, exists: ${!!cookie}`);
-          }
-          return cookie?.value
+          const cookie = request.cookies.get(name);
+          return cookie?.value;
         },
         set(name, value, options) {
-          // Log PKCE cookies for debugging in non-production
-          if (process.env.NODE_ENV !== 'production' && 
-             (name.includes('code-verifier') || name.startsWith('sb-'))) {
-            console.log(`[Middleware Helper] Setting cookie: ${name}`);
-          }
-          
-          // This is a safe way to set request cookies by getting all current cookies
-          // and then setting the cookie values including the new one
-          const requestHeaders = new Headers(request.headers)
-          if (request.cookies.get(name)?.value !== value) {
-            requestHeaders.set('cookie', 
-              request.cookies.getAll()
-                .map(cookie => `${cookie.name}=${cookie.value}`)
-                .join('; ') + `; ${name}=${value}`
-            )
-          }
-          
-          // Set cookie in the response
-          response = NextResponse.next({
-            request: {
-              headers: requestHeaders,
-            },
-          })
-          
-          // We can use the response.cookies.set directly
-          response.cookies.set({
+          // Set the cookie in the response with consistent options
+          const cookieSettings = {
             name,
             value,
+            ...cookieOptions,
             ...options,
-            path: options?.path ?? '/',
-            // Make sure SameSite is appropriate
-            sameSite: options?.sameSite ?? 'lax',
-            // Make sure secure is set for production
-            secure: process.env.NODE_ENV === 'production'
-          })
+            path: '/', // Always use root path
+          };
+          
+          // Set in response
+          response.cookies.set(cookieSettings);
+          
+          // For debugging
+          console.log(`[Middleware] Set cookie: ${name}`);
         },
         remove(name, options) {
-          // Log PKCE cookies for debugging in non-production
-          if (process.env.NODE_ENV !== 'production' && 
-             (name.includes('code-verifier') || name.startsWith('sb-'))) {
-            console.log(`[Middleware Helper] Removing cookie: ${name}`);
-          }
-          
-          // Only modify response cookies
-          response = NextResponse.next({
-            request: {
-              headers: request.headers,
-            },
-          })
-          
-          // For removal, we set an expired cookie
+          // Ensure we're removing the cookie with the exact same path it was set with
           response.cookies.set({
             name,
             value: '',
             maxAge: 0,
-            path: options?.path ?? '/',
-          })
+            path: '/',
+            sameSite: 'lax',
+            secure: process.env.NODE_ENV === 'production',
+            httpOnly: true,
+          });
+          
+          console.log(`[Middleware] Removed cookie: ${name}`);
         },
       },
     }
   )
 
-  // Refresh the session - this will set/refresh cookies if a session exists
-  await supabase.auth.getUser()
+  // Actually refresh the session
+  try {
+    const { data: { session }, error } = await supabase.auth.getSession();
+    
+    if (error) {
+      console.error('[Middleware] Error refreshing session:', error.message);
+    } else if (session) {
+      console.log('[Middleware] Session refreshed successfully for user:', session.user.email);
+      
+      // Refresh the access token if needed
+      // This helps ensure the session stays valid longer
+      if (session.expires_at) {
+        const expiresAt = new Date(session.expires_at * 1000);
+        const now = new Date();
+        const hoursBefore = 1; // Refresh 1 hour before expiration
+        const refreshTime = new Date(expiresAt.getTime() - (hoursBefore * 60 * 60 * 1000));
+        
+        if (now >= refreshTime) {
+          console.log('[Middleware] Access token needs refreshing');
+          await supabase.auth.refreshSession();
+        }
+      }
+    } else {
+      console.log('[Middleware] No active session found');
+    }
+  } catch (e) {
+    console.error('[Middleware] Unexpected error in session refresh:', e);
+  }
 
   return response
 } 

@@ -1,9 +1,16 @@
 import { redirect } from 'next/navigation'
+import { createClient } from '@/utils/supabase/server'
 
-export default function Page() {
-  // This will trigger an immediate redirect to /dashboard
-  redirect('/dashboard')
+export default async function Page() {
+  // Check if user is already authenticated
+  const supabase = createClient()
+  const { data } = await supabase.auth.getUser()
   
-  // This part won't be rendered, but is needed to satisfy TypeScript
-  return null
+  if (data.user) {
+    // User is authenticated, redirect to dashboard
+    redirect('/dashboard')
+  } else {
+    // User is not authenticated, redirect to sign-in
+    redirect('/sign-in')
+  }
 } 

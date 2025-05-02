@@ -2,25 +2,19 @@
 
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { supabase } from '@/lib/supabase'
 import { useToast } from '@/hooks/use-toast'
 import { Button } from '@/components/ui/button'
+import { useAuth } from '@/components/auth/auth-provider'
 
 export function Header() {
   const router = useRouter()
   const { toast } = useToast()
+  const { signOut } = useAuth()
 
   const handleSignOut = async () => {
     try {
-      const { error } = await supabase.auth.signOut()
-      if (error) throw error
-      
-      toast({
-        title: "Signed out",
-        description: "You have been successfully signed out."
-      })
-      
-      router.push('/sign-in')
+      await signOut()
+      // signOut already handles redirects and state updates
     } catch (error) {
       toast({
         title: "Error",
