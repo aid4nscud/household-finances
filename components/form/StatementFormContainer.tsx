@@ -45,6 +45,19 @@ export function StatementFormContainer({
         if (sessionError || !freshSession.session) {
           console.error('Authentication error before statement submission:', sessionError || 'No session available');
           console.log('Auth state:', { authSession: !!authSession, authUser: !!authUser, freshSession: !!freshSession.session });
+          
+          // Redirect to sign-in
+          toast({
+            title: "Session Expired",
+            description: "Your session has expired. Please sign in again.",
+            variant: "destructive",
+            duration: 5000,
+          });
+          
+          setTimeout(() => {
+            router.push('/sign-in');
+          }, 1500);
+          
           throw new Error('Authentication error: You must be logged in to submit a statement.');
         } else {
           console.log('Successfully retrieved fresh session for user:', freshSession.session.user.email);

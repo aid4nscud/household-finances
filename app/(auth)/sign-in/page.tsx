@@ -1,11 +1,22 @@
 import { AuthForm } from '@/components/auth/auth-form'
 import Link from 'next/link'
+import { createClient } from '@/utils/supabase/server'
+import { redirect } from 'next/navigation'
 
 interface SignInPageProps {
   searchParams: { error?: string }
 }
 
-export default function SignInPage({ searchParams }: SignInPageProps) {
+export default async function SignInPage({ searchParams }: SignInPageProps) {
+  // Check if user is already authenticated
+  const supabase = createClient()
+  const { data: { session } } = await supabase.auth.getSession()
+  
+  // If authenticated, redirect to dashboard
+  if (session) {
+    redirect('/dashboard')
+  }
+  
   const errorMessage = searchParams.error
   
   return (

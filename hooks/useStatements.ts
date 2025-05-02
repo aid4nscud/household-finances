@@ -3,12 +3,42 @@
 import { useState } from 'react'
 import { useToast } from './use-toast'
 import { createClient } from '@/utils/supabase/client'
+import { useRouter } from 'next/navigation'
 
 export function useStatements() {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const { toast } = useToast()
   const supabase = createClient()
+  const router = useRouter()
+
+  // Helper function to get authenticated session with retry
+  const getAuthenticatedSession = async () => {
+    // First attempt
+    const { data: authData, error: authError } = await supabase.auth.getSession()
+    
+    if (!authError && authData.session && authData.session.user) {
+      return { session: authData.session, error: null }
+    }
+    
+    console.log('Initial session check failed, attempting to refresh...', authError || 'No session found')
+    
+    // Try to refresh the session
+    const { data: refreshData, error: refreshError } = await supabase.auth.refreshSession()
+    
+    if (!refreshError && refreshData.session && refreshData.session.user) {
+      console.log('Session successfully refreshed')
+      return { session: refreshData.session, error: null }
+    }
+    
+    console.error('Session refresh failed:', refreshError || 'No session after refresh')
+    
+    // Final error - no valid session
+    return { 
+      session: null, 
+      error: authError || refreshError || new Error('No valid authentication session found') 
+    }
+  }
 
   // Create a new income statement
   const createStatement = async (statementData: any) => {
@@ -17,19 +47,29 @@ export function useStatements() {
 
     try {
       // Check authentication before proceeding
-      const { data: authData, error: authError } = await supabase.auth.getSession()
+      const { session, error: authError } = await getAuthenticatedSession()
       
       if (authError) {
-        console.error('Auth error details:', authError)
+        console.error('Authentication error details:', authError)
+        
+        // Redirect to sign-in if authentication fails
+        toast({
+          title: "Session Expired",
+          description: "Your session has expired. Please sign in again.",
+          variant: "destructive",
+          duration: 5000,
+        })
+        
+        // Let the component handle the redirect to avoid navigation during rendering
         throw new Error('Authentication error: ' + authError.message)
       }
       
-      if (!authData.session || !authData.session.user) {
-        console.error('No valid session found', authData)
+      if (!session || !session.user) {
+        console.error('No valid session found')
         throw new Error('You must be logged in to create a statement.')
       }
       
-      const userId = authData.session.user.id
+      const userId = session.user.id
       console.log('Creating statement for user ID:', userId)
       
       // Insert the data
@@ -87,19 +127,28 @@ export function useStatements() {
 
     try {
       // Check authentication before proceeding
-      const { data: authData, error: authError } = await supabase.auth.getSession()
+      const { session, error: authError } = await getAuthenticatedSession()
       
       if (authError) {
-        console.error('Auth error details:', authError)
+        console.error('Authentication error details:', authError)
+        
+        // Redirect to sign-in if authentication fails
+        toast({
+          title: "Session Expired",
+          description: "Your session has expired. Please sign in again.",
+          variant: "destructive",
+          duration: 5000,
+        })
+        
         throw new Error('Authentication error: ' + authError.message)
       }
       
-      if (!authData.session || !authData.session.user) {
-        console.error('No valid session found', authData)
+      if (!session || !session.user) {
+        console.error('No valid session found')
         throw new Error('You must be logged in to update a statement.')
       }
       
-      const userId = authData.session.user.id
+      const userId = session.user.id
       console.log('Updating statement for user ID:', userId)
       
       // Update the data
@@ -159,19 +208,22 @@ export function useStatements() {
 
     try {
       // Check authentication before proceeding
-      const { data: authData, error: authError } = await supabase.auth.getSession()
+      const { session, error: authError } = await getAuthenticatedSession()
       
       if (authError) {
-        console.error('Auth error details in getLatestStatement:', authError)
-        throw new Error('Authentication error: ' + authError.message)
+        console.error('Authentication error details in getLatestStatement:', authError)
+        
+        // Silent error for retrieving statements - component will handle redirect
+        console.log('Auth error when retrieving statement, component will handle redirect')
+        return null
       }
       
-      if (!authData.session || !authData.session.user) {
-        console.error('No valid session found in getLatestStatement', authData)
-        throw new Error('You must be logged in to retrieve a statement.')
+      if (!session || !session.user) {
+        console.error('No valid session found in getLatestStatement')
+        return null
       }
       
-      const userId = authData.session.user.id
+      const userId = session.user.id
       console.log('Getting latest statement for user ID:', userId)
       
       // Get the most recent statement
