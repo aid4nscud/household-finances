@@ -9,6 +9,7 @@ import { useToast } from '@/hooks/use-toast'
 import { Card, CardContent } from '@/components/ui/card'
 import { FormError } from '@/components/ui/form-error'
 import { Badge, PenLine } from 'lucide-react'
+import { createClient } from '@/utils/supabase/client'
 
 export function StatementFormContainer({ 
   initialEmail,
@@ -31,6 +32,15 @@ export function StatementFormContainer({
     setFormError(null);
     
     try {
+      // First verify authentication status
+      const supabase = createClient()
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession()
+      
+      if (sessionError || !session) {
+        console.error('Authentication error before statement submission:', sessionError);
+        throw new Error('Authentication error: You must be logged in to submit a statement.');
+      }
+      
       // Delay to ensure the loading state is visible
       await new Promise(resolve => setTimeout(resolve, 500));
       

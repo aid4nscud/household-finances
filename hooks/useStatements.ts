@@ -17,17 +17,26 @@ export function useStatements() {
 
     try {
       // Check authentication before proceeding
-      const { data: authData, error: authError } = await supabase.auth.getUser()
+      const { data: authData, error: authError } = await supabase.auth.getSession()
       
-      if (authError || !authData.user) {
+      if (authError) {
+        console.error('Auth error details:', authError)
+        throw new Error('Authentication error: ' + authError.message)
+      }
+      
+      if (!authData.session || !authData.session.user) {
+        console.error('No valid session found', authData)
         throw new Error('You must be logged in to create a statement.')
       }
+      
+      const userId = authData.session.user.id
+      console.log('Creating statement for user ID:', userId)
       
       // Insert the data
       const { data, error } = await supabase
         .from('income_statements')
         .insert({
-          user_id: authData.user.id,
+          user_id: userId,
           statement_data: statementData
         })
         .select('id')
@@ -78,11 +87,20 @@ export function useStatements() {
 
     try {
       // Check authentication before proceeding
-      const { data: authData, error: authError } = await supabase.auth.getUser()
+      const { data: authData, error: authError } = await supabase.auth.getSession()
       
-      if (authError || !authData.user) {
+      if (authError) {
+        console.error('Auth error details:', authError)
+        throw new Error('Authentication error: ' + authError.message)
+      }
+      
+      if (!authData.session || !authData.session.user) {
+        console.error('No valid session found', authData)
         throw new Error('You must be logged in to update a statement.')
       }
+      
+      const userId = authData.session.user.id
+      console.log('Updating statement for user ID:', userId)
       
       // Update the data
       const { data, error } = await supabase
@@ -92,7 +110,7 @@ export function useStatements() {
           updated_at: new Date().toISOString() // Explicitly update the timestamp
         })
         .eq('id', id)
-        .eq('user_id', authData.user.id) // Ensure user owns this statement
+        .eq('user_id', userId) // Ensure user owns this statement
         .select('id')
         .single()
       

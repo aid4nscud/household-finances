@@ -2,6 +2,7 @@ import MainNav from '@/components/core/main-nav'
 import { createClient } from '@/utils/supabase/server'
 import SupabaseListener from '@/components/ui/supabase-listener'
 import { Toaster } from '@/components/ui/toaster'
+import { redirect } from 'next/navigation'
 
 export default async function MainLayout({
   children,
@@ -10,6 +11,12 @@ export default async function MainLayout({
 }) {
   const supabase = createClient()
   const { data: { session } } = await supabase.auth.getSession()
+  
+  // Redirect unauthenticated users to sign-in
+  if (!session) {
+    console.log('[MainLayout] No active session found, redirecting to sign-in')
+    redirect('/sign-in')
+  }
 
   return (
     <div className="relative flex min-h-screen flex-col">
