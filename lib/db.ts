@@ -1,5 +1,5 @@
-import { createServerSupabaseClient } from './supabase-server'
-import { createServiceClient } from './supabase'
+import { createClient } from '@/utils/supabase/server'
+import { createServiceClient } from '@/lib/supabase'
 import { cache } from 'react'
 
 /**
@@ -7,7 +7,7 @@ import { cache } from 'react'
  * Cached for improved performance
  */
 export const getIncomeStatements = cache(async (userId: string, page = 1, limit = 10) => {
-  const supabase = createServerSupabaseClient()
+  const supabase = createClient()
   const start = (page - 1) * limit
   const end = start + limit - 1
 
@@ -31,7 +31,7 @@ export const getIncomeStatements = cache(async (userId: string, page = 1, limit 
  * Cached for improved performance
  */
 export const getIncomeStatementById = cache(async (id: string, userId: string) => {
-  const supabase = createServerSupabaseClient()
+  const supabase = createClient()
   
   const { data, error } = await supabase
     .from('income_statements')
@@ -52,7 +52,7 @@ export const getIncomeStatementById = cache(async (id: string, userId: string) =
  * Delete an income statement by ID
  */
 export async function deleteIncomeStatement(id: string, userId: string) {
-  const supabase = createServerSupabaseClient()
+  const supabase = createClient()
   
   const { error } = await supabase
     .from('income_statements')

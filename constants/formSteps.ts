@@ -4,8 +4,9 @@ export const FORM_STEPS: FormStep[] = [
   { id: 'income', title: 'Income' },
   { id: 'preTaxDeductions', title: 'Pre-Tax Deductions' },
   { id: 'essentialNeeds', title: 'Essential Needs' },
+  { id: 'costToEarn', title: 'Cost to Earn' },
   { id: 'savingsInvestments', title: 'Savings & Investments' },
-  { id: 'discretionaryExpenses', title: 'Discretionary Expenses' },
+  { id: 'lifestyleDividends', title: 'Lifestyle Dividends' },
   { id: 'annualExpenses', title: 'Annual Expenses' },
   { id: 'additionalInfo', title: 'Additional Information' },
   { id: 'review', title: 'Review & Submit' }
@@ -41,6 +42,17 @@ export const INITIAL_FORM_STATE = {
   debtPayments: '',
   personalCareMedical: '',
   
+  // Cost to Earn (C2E) Specific Categories
+  commutingTransportation: '',
+  workTechnology: '',
+  dependentCare: '',
+  workShelterUtilities: '',
+  workAttire: '',
+  workMeals: '',
+  licensingEducation: '',
+  workHealthWellness: '',
+  workDebtObligations: '',
+  
   // Savings & Investments
   shortTermSavings: '',
   longTermInvestments: '',
@@ -48,14 +60,27 @@ export const INITIAL_FORM_STATE = {
   charitableGiving: '',
   retirementSavings: '',
   
-  // Wants / Discretionary Expenses
+  // Lifestyle Dividends (Discretionary Expenses)
+  foodEntertainment: '',
+  travelExperiences: '',
+  subscriptionsMemberships: '',
+  homeLivingDecor: '',
+  clothingStyle: '',
+  fitnessWellness: '',
+  giftsCelebrations: '',
+  hobbiesRecreation: '',
+  beautySelfCare: '',
+  convenienceTimeSavers: '',
+  petCare: '',
+  kidsSchooling: '',
+  philanthropyFamilySupport: '',
+  
+  // Legacy discretionary expenses (for backward compatibility)
   entertainmentLeisure: '',
   diningOut: '',
   shoppingPersonal: '',
-  fitnessWellness: '',
   travelVacations: '',
   subscriptions: '',
-  hobbiesRecreation: '',
   giftsSupport: '',
   
   // Annual or Irregular Expenses
@@ -78,4 +103,4 @@ export const INITIAL_FORM_STATE = {
   totalNetWorth: '',
   savingsRate: '',
   debtToIncomeRatio: ''
-}; 
+};

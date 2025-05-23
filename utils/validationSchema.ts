@@ -91,71 +91,71 @@ export const personalInfoSchema = formDataSchema.pick({
   email: true,
 });
 
-// For income step, primaryIncome is required, others can be 0
+// For income step, only primaryIncome is required
 export const incomeSchema = z.object({
   primaryIncome: z.string().refine(isRequiredPositiveNumber, errorMessages.required),
-  secondaryIncome: z.string().refine(val => val !== '', errorMessages.required),
-  investmentIncome: z.string().refine(val => val !== '', errorMessages.required),
-  governmentBenefits: z.string().refine(val => val !== '', errorMessages.required),
-  alimonyChildSupport: z.string().refine(val => val !== '', errorMessages.required),
-  otherIncome: z.string().refine(val => val !== '', errorMessages.required),
+  secondaryIncome: z.string().refine(val => val === '' || isPositiveNumber(val), errorMessages.positiveNumber).optional(),
+  investmentIncome: z.string().refine(val => val === '' || isPositiveNumber(val), errorMessages.positiveNumber).optional(),
+  governmentBenefits: z.string().refine(val => val === '' || isPositiveNumber(val), errorMessages.positiveNumber).optional(),
+  alimonyChildSupport: z.string().refine(val => val === '' || isPositiveNumber(val), errorMessages.positiveNumber).optional(),
+  otherIncome: z.string().refine(val => val === '' || isPositiveNumber(val), errorMessages.positiveNumber).optional(),
 });
 
-// For pre-tax deductions, all fields must have a value
+// For pre-tax deductions, only basic tax fields are required
 export const preTaxDeductionsSchema = z.object({
   federalIncomeTax: z.string().refine(val => val !== '', errorMessages.required),
   stateIncomeTax: z.string().refine(val => val !== '', errorMessages.required),
   ficaTax: z.string().refine(val => val !== '', errorMessages.required),
-  retirementContributions: z.string().refine(val => val !== '', errorMessages.required),
-  healthInsurancePremiums: z.string().refine(val => val !== '', errorMessages.required),
-  hsaFsaContributions: z.string().refine(val => val !== '', errorMessages.required),
-  unionDues: z.string().refine(val => val !== '', errorMessages.required),
-  otherPayrollDeductions: z.string().refine(val => val !== '', errorMessages.required),
+  retirementContributions: z.string().refine(val => val === '' || isPositiveNumber(val), errorMessages.positiveNumber).optional(),
+  healthInsurancePremiums: z.string().refine(val => val === '' || isPositiveNumber(val), errorMessages.positiveNumber).optional(),
+  hsaFsaContributions: z.string().refine(val => val === '' || isPositiveNumber(val), errorMessages.positiveNumber).optional(),
+  unionDues: z.string().refine(val => val === '' || isPositiveNumber(val), errorMessages.positiveNumber).optional(),
+  otherPayrollDeductions: z.string().refine(val => val === '' || isPositiveNumber(val), errorMessages.positiveNumber).optional(),
 });
 
-// For essential needs, all fields must have a value
+// For essential needs, only basic living expenses are required
 export const essentialNeedsSchema = z.object({
   housingExpenses: z.string().refine(val => val !== '', errorMessages.required),
   utilities: z.string().refine(val => val !== '', errorMessages.required),
   foodGroceries: z.string().refine(val => val !== '', errorMessages.required),
-  transportation: z.string().refine(val => val !== '', errorMessages.required),
-  healthcare: z.string().refine(val => val !== '', errorMessages.required),
-  childcareEducation: z.string().refine(val => val !== '', errorMessages.required),
-  insurance: z.string().refine(val => val !== '', errorMessages.required),
-  debtPayments: z.string().refine(val => val !== '', errorMessages.required),
-  personalCareMedical: z.string().refine(val => val !== '', errorMessages.required),
+  transportation: z.string().refine(val => val === '' || isPositiveNumber(val), errorMessages.positiveNumber).optional(),
+  healthcare: z.string().refine(val => val === '' || isPositiveNumber(val), errorMessages.positiveNumber).optional(),
+  childcareEducation: z.string().refine(val => val === '' || isPositiveNumber(val), errorMessages.positiveNumber).optional(),
+  insurance: z.string().refine(val => val === '' || isPositiveNumber(val), errorMessages.positiveNumber).optional(),
+  debtPayments: z.string().refine(val => val === '' || isPositiveNumber(val), errorMessages.positiveNumber).optional(),
+  personalCareMedical: z.string().refine(val => val === '' || isPositiveNumber(val), errorMessages.positiveNumber).optional(),
 });
 
-// For savings & investments, all fields must have a value
+// For savings & investments, all fields are optional
 export const savingsInvestmentsSchema = z.object({
-  shortTermSavings: z.string().refine(val => val !== '', errorMessages.required),
-  longTermInvestments: z.string().refine(val => val !== '', errorMessages.required),
-  educationSavings: z.string().refine(val => val !== '', errorMessages.required),
-  charitableGiving: z.string().refine(val => val !== '', errorMessages.required),
-  retirementSavings: z.string().refine(val => val !== '', errorMessages.required),
+  shortTermSavings: z.string().refine(val => val === '' || isPositiveNumber(val), errorMessages.positiveNumber).optional(),
+  longTermInvestments: z.string().refine(val => val === '' || isPositiveNumber(val), errorMessages.positiveNumber).optional(),
+  educationSavings: z.string().refine(val => val === '' || isPositiveNumber(val), errorMessages.positiveNumber).optional(),
+  charitableGiving: z.string().refine(val => val === '' || isPositiveNumber(val), errorMessages.positiveNumber).optional(),
+  retirementSavings: z.string().refine(val => val === '' || isPositiveNumber(val), errorMessages.positiveNumber).optional(),
 });
 
-// For discretionary expenses, all fields must have a value
+// For discretionary expenses, all fields are optional
 export const discretionaryExpensesSchema = z.object({
-  entertainmentLeisure: z.string().refine(val => val !== '', errorMessages.required),
-  diningOut: z.string().refine(val => val !== '', errorMessages.required),
-  shoppingPersonal: z.string().refine(val => val !== '', errorMessages.required),
-  fitnessWellness: z.string().refine(val => val !== '', errorMessages.required),
-  travelVacations: z.string().refine(val => val !== '', errorMessages.required),
-  subscriptions: z.string().refine(val => val !== '', errorMessages.required),
-  hobbiesRecreation: z.string().refine(val => val !== '', errorMessages.required),
-  giftsSupport: z.string().refine(val => val !== '', errorMessages.required),
+  entertainmentLeisure: z.string().refine(val => val === '' || isPositiveNumber(val), errorMessages.positiveNumber).optional(),
+  diningOut: z.string().refine(val => val === '' || isPositiveNumber(val), errorMessages.positiveNumber).optional(),
+  shoppingPersonal: z.string().refine(val => val === '' || isPositiveNumber(val), errorMessages.positiveNumber).optional(),
+  fitnessWellness: z.string().refine(val => val === '' || isPositiveNumber(val), errorMessages.positiveNumber).optional(),
+  travelVacations: z.string().refine(val => val === '' || isPositiveNumber(val), errorMessages.positiveNumber).optional(),
+  subscriptions: z.string().refine(val => val === '' || isPositiveNumber(val), errorMessages.positiveNumber).optional(),
+  hobbiesRecreation: z.string().refine(val => val === '' || isPositiveNumber(val), errorMessages.positiveNumber).optional(),
+  giftsSupport: z.string().refine(val => val === '' || isPositiveNumber(val), errorMessages.positiveNumber).optional(),
 });
 
-// For annual expenses, all fields must have a value
+// For annual expenses, all fields are optional
 export const annualExpensesSchema = z.object({
-  annualLicenses: z.string().refine(val => val !== '', errorMessages.required),
-  homeRepairs: z.string().refine(val => val !== '', errorMessages.required),
-  holidayGifts: z.string().refine(val => val !== '', errorMessages.required),
-  personalCelebrations: z.string().refine(val => val !== '', errorMessages.required),
-  familyEvents: z.string().refine(val => val !== '', errorMessages.required),
-  vehicleMaintenance: z.string().refine(val => val !== '', errorMessages.required),
-  professionalDevelopment: z.string().refine(val => val !== '', errorMessages.required),
+  annualLicenses: z.string().refine(val => val === '' || isPositiveNumber(val), errorMessages.positiveNumber).optional(),
+  homeRepairs: z.string().refine(val => val === '' || isPositiveNumber(val), errorMessages.positiveNumber).optional(),
+  holidayGifts: z.string().refine(val => val === '' || isPositiveNumber(val), errorMessages.positiveNumber).optional(),
+  personalCelebrations: z.string().refine(val => val === '' || isPositiveNumber(val), errorMessages.positiveNumber).optional(),
+  familyEvents: z.string().refine(val => val === '' || isPositiveNumber(val), errorMessages.positiveNumber).optional(),
+  vehicleMaintenance: z.string().refine(val => val === '' || isPositiveNumber(val), errorMessages.positiveNumber).optional(),
+  professionalDevelopment: z.string().refine(val => val === '' || isPositiveNumber(val), errorMessages.positiveNumber).optional(),
 });
 
 // For additional info, fields are optional

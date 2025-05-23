@@ -1,5 +1,5 @@
 import React from 'react';
-import { NumberFieldProps } from '../../types/index';
+import { NumberFieldWithC2EProps } from '../../types/index';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { 
@@ -10,8 +10,9 @@ import {
   FormLabel,
   FormMessage
 } from "@/components/ui/form";
+import C2EToggle from './C2EToggle';
 
-const NumberField: React.FC<NumberFieldProps> = ({ 
+const NumberFieldWithC2E: React.FC<NumberFieldWithC2EProps> = ({ 
   id, 
   label, 
   name, 
@@ -29,6 +30,10 @@ const NumberField: React.FC<NumberFieldProps> = ({
   suffix,
   disabled,
   tooltip,
+  showC2EToggle = false,
+  isC2E = false,
+  c2ePercentage = 100,
+  onC2EChange,
   isRequired
 }) => {
   // Function to handle changes, ensuring only valid numeric input
@@ -44,14 +49,24 @@ const NumberField: React.FC<NumberFieldProps> = ({
 
   return (
     <FormItem className="mb-6 relative">
-      <div className="flex items-center justify-between mb-1.5">
-        <FormLabel 
-          htmlFor={id}
-          className="text-sm font-medium text-gray-700 dark:text-gray-300"
-        >
-          {label}
-          {isRequired && <span className="text-[#00C805] ml-1">*</span>}
-        </FormLabel>
+      <div className="flex flex-col space-y-1.5">
+        <div className="flex items-center justify-between">
+          <FormLabel 
+            htmlFor={id}
+            className="text-sm font-medium text-gray-700 dark:text-gray-300"
+          >
+            {label}
+            {isRequired && <span className="text-[#00C805] ml-1">*</span>}
+          </FormLabel>
+          {showC2EToggle && onC2EChange && (
+            <C2EToggle
+              fieldId={id}
+              isC2E={isC2E}
+              percentage={c2ePercentage}
+              onChange={onC2EChange}
+            />
+          )}
+        </div>
         {description && (
           <FormDescription 
             id={`${id}-description`}
@@ -61,7 +76,7 @@ const NumberField: React.FC<NumberFieldProps> = ({
           </FormDescription>
         )}
       </div>
-      <div className="relative">
+      <div className="relative mt-1.5">
         {prefix && (
           <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
             <span className="text-gray-500 dark:text-gray-400 font-medium">{prefix}</span>
@@ -95,6 +110,7 @@ const NumberField: React.FC<NumberFieldProps> = ({
               ${suffix ? 'pr-8' : 'pr-4'}
               ${touched && error ? 'border-red-500 dark:border-red-500' : ''}
               ${disabled ? 'bg-gray-100 dark:bg-gray-800 cursor-not-allowed' : ''}
+              ${isC2E ? 'border-[#00C805] dark:border-[#00C805] bg-[#00C805]/5 dark:bg-[#00C805]/10' : ''}
             `}
             aria-invalid={touched && error ? 'true' : 'false'}
             aria-describedby={`${id}-error ${id}-description`}
@@ -119,4 +135,4 @@ const NumberField: React.FC<NumberFieldProps> = ({
   );
 };
 
-export default React.memo(NumberField); 
+export default React.memo(NumberFieldWithC2E); 

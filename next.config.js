@@ -16,6 +16,10 @@ const nextConfig = {
     // Keep the pages in memory for 5 minutes (helps preserve logs)
     maxInactiveAge: 5 * 60 * 1000,
   },
+  // Enable experimental features
+  experimental: {
+    serverActions: true,
+  },
 }
 
 module.exports = nextConfig 

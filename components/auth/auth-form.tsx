@@ -1,24 +1,15 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useRouter, useSearchParams } from 'next/navigation'
+import { useRouter } from 'next/navigation'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm } from 'react-hook-form'
 import * as z from 'zod'
-import { createClient } from '@/utils/supabase/client'
+import { signInWithEmail, signUp } from '@/app/actions/auth'
 import { useToast } from '@/hooks/use-toast'
-import { isRateLimited } from '@/utils/rate-limit'
-import { REDIRECT_URL } from '@/lib/constants'
+import { LOCAL_REDIRECT_URL, PRODUCTION_REDIRECT_URL } from '@/lib/constants'
 
 import { Button } from '@/components/ui/button'
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import {
   Form,
@@ -28,15 +19,14 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form'
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
-import { AlertCircle } from 'lucide-react'
+import { Alert, AlertDescription } from '@/components/ui/alert'
+import { AlertCircle, Mail, Loader2 } from 'lucide-react'
 
 // Form schema for input validation
 const formSchema = z.object({
   email: z.string().email({ message: 'Please enter a valid email address' }),
 })
 
-// Component types
 interface AuthFormProps {
   mode?: 'signIn' | 'signUp'
 }
@@ -46,18 +36,18 @@ export function AuthForm({ mode = 'signIn' }: AuthFormProps) {
   const [isCodeSent, setIsCodeSent] = useState(false)
   const [email, setEmail] = useState('')
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
+  const [redirectUrl, setRedirectUrl] = useState(LOCAL_REDIRECT_URL)
   const router = useRouter()
-  const searchParams = useSearchParams()
   const { toast } = useToast()
-  const supabase = createClient()
 
-  // Check for error in URL parameters (from auth callback redirect)
+  // Move redirect URL logic into useEffect
   useEffect(() => {
-    const errorParam = searchParams?.get('error')
-    if (errorParam) {
-      setErrorMessage(decodeURIComponent(errorParam))
+    if (typeof window !== 'undefined') {
+      const isLocalhost = window.location.hostname === 'localhost' || 
+                         window.location.hostname === '127.0.0.1'
+      setRedirectUrl(isLocalhost ? LOCAL_REDIRECT_URL : PRODUCTION_REDIRECT_URL)
     }
-  }, [searchParams])
+  }, []) // Empty dependency array means this only runs once on mount
 
   // Initialize form
   const form = useForm<z.infer<typeof formSchema>>({
@@ -72,32 +62,22 @@ export function AuthForm({ mode = 'signIn' }: AuthFormProps) {
       setIsLoading(true)
       setErrorMessage(null)
       setEmail(values.email)
-      
-      // Apply rate limiting based on email
-      if (isRateLimited(values.email)) {
-        throw new Error('Too many requests. Please try again later.')
-      }
-      
-      // Log the redirect URL for debugging
-      console.log('[AuthForm] Using redirect URL:', REDIRECT_URL);
-      console.log('[AuthForm] Current environment:', process.env.NODE_ENV);
-      console.log('[AuthForm] Sending magic link to:', values.email, {
-        redirectTo: REDIRECT_URL,
-        createUser: mode === 'signUp'
-      })
-      
-      // Handle passwordless authentication with magic link
-      const { data, error } = await supabase.auth.signInWithOtp({
-        email: values.email,
-        options: {
-          emailRedirectTo: REDIRECT_URL,
-          shouldCreateUser: mode === 'signUp' // Only create a new user in signUp mode
-        },
-      });
 
-      if (error) {
-        console.error('[AuthForm] Auth error:', error.message)
-        throw error;
+      const formData = new FormData()
+      formData.append('email', values.email)
+
+      const result = mode === 'signIn' 
+        ? await signInWithEmail(formData)
+        : await signUp(formData)
+
+      if (result.error) {
+        setErrorMessage(result.error)
+        toast({
+          title: 'Error',
+          description: result.error,
+          variant: 'destructive',
+        })
+        return
       }
 
       setIsCodeSent(true)
@@ -105,18 +85,11 @@ export function AuthForm({ mode = 'signIn' }: AuthFormProps) {
         title: 'Magic link sent',
         description: 'Check your email for the login link',
       })
-    } catch (error) {
-      console.error('[AuthForm] Authentication error:', error)
-      
-      const message = error instanceof Error 
-        ? error.message 
-        : 'Failed to send magic link'
-        
-      setErrorMessage(message)
-      
+    } catch (error: any) {
+      setErrorMessage(error.message)
       toast({
         title: 'Error',
-        description: message,
+        description: error.message,
         variant: 'destructive',
       })
     } finally {
@@ -125,87 +98,87 @@ export function AuthForm({ mode = 'signIn' }: AuthFormProps) {
   }
 
   return (
-    <Card className="w-full shadow-sm border-0 bg-white/50 backdrop-blur-sm">
-      <CardHeader className="space-y-1 pb-2">
-        <CardTitle className="text-2xl font-bold text-center">
-          {mode === 'signIn' ? 'Sign In' : 'Sign Up'}
-        </CardTitle>
-        {!isCodeSent && (
-          <CardDescription className="text-center">
-            {mode === 'signIn' ? 'Sign in' : 'Create an account'} with your email
-          </CardDescription>
-        )}
-      </CardHeader>
-      <CardContent className="pt-4">
-        {errorMessage && (
-          <Alert variant="destructive" className="mb-4">
-            <AlertCircle className="h-4 w-4" />
-            <AlertTitle>Error</AlertTitle>
-            <AlertDescription>{errorMessage}</AlertDescription>
-          </Alert>
-        )}
-        
-        {!isCodeSent ? (
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
-              <FormField
-                control={form.control}
-                name="email"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-foreground/80">Email</FormLabel>
-                    <FormControl>
+    <div className="w-full">
+      {errorMessage && (
+        <Alert variant="destructive" className="mb-4 text-sm bg-red-50 dark:bg-red-900/20 border-0">
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription>{errorMessage}</AlertDescription>
+        </Alert>
+      )}
+      
+      {!isCodeSent ? (
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
+            <FormField
+              control={form.control}
+              name="email"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-gray-700 dark:text-gray-300 text-sm">Email</FormLabel>
+                  <FormControl>
+                    <div className="relative">
+                      <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
                       <Input 
                         placeholder="name@example.com" 
                         type="email" 
                         autoComplete="email"
                         disabled={isLoading}
-                        className="h-11 px-4"
+                        className="h-10 pl-9 bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700"
                         {...field} 
                       />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <Button 
-                type="submit" 
-                className="w-full h-11 font-medium shadow-sm transition-all"
-                disabled={isLoading}
-              >
-                {isLoading ? 'Sending...' : 'Send magic link'}
-              </Button>
-            </form>
-          </Form>
-        ) : (
-          <div className="text-center space-y-5 py-3">
-            <div className="bg-primary/10 rounded-lg py-4 px-3">
-              <p className="text-sm text-primary/80">
-                Check your email <span className="font-medium">({email})</span> for the login link
-              </p>
-            </div>
-            <Button
-              variant="outline"
-              className="w-full h-11"
-              onClick={() => setIsCodeSent(false)}
+                    </div>
+                  </FormControl>
+                  <FormMessage className="text-xs" />
+                </FormItem>
+              )}
+            />
+            
+            <Button 
+              type="submit" 
+              className="w-full bg-[#00C805] hover:bg-[#00C805]/90 text-white"
+              disabled={isLoading}
             >
-              Use a different email
+              {isLoading ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  <span>Sending...</span>
+                </>
+              ) : (
+                <span>Send magic link</span>
+              )}
             </Button>
+          </form>
+        </Form>
+      ) : (
+        <div className="space-y-5">
+          <div className="bg-[#00C805]/5 border border-[#00C805]/20 rounded p-4 text-center">
+            <p className="text-sm mb-1">
+              Check your email for the login link
+            </p>
+            <p className="text-xs text-gray-500 break-all">
+              {email}
+            </p>
           </div>
-        )}
-      </CardContent>
-      <CardFooter className="flex justify-center pt-0 pb-6">
-        <p className="text-sm text-muted-foreground">
-          {mode === 'signIn' ? "Don't have an account? " : "Already have an account? "}
-          <Button 
-            variant="link" 
-            className="p-0 h-auto font-medium text-primary" 
-            onClick={() => router.push(mode === 'signIn' ? '/sign-up' : '/sign-in')}
+          
+          <Button
+            variant="outline"
+            className="w-full border-gray-200 dark:border-gray-700"
+            onClick={() => setIsCodeSent(false)}
           >
-            {mode === 'signIn' ? 'Sign up' : 'Sign in'}
+            Use a different email
           </Button>
-        </p>
-      </CardFooter>
-    </Card>
+        </div>
+      )}
+      
+      <div className="mt-4 text-center">
+        <Button 
+          variant="link" 
+          className="p-0 h-auto text-sm text-[#00C805]"
+          onClick={() => router.push(mode === 'signIn' ? '/sign-up' : '/sign-in')}
+        >
+          {mode === 'signIn' ? 'Create an account' : 'Sign in instead'}
+        </Button>
+      </div>
+    </div>
   )
 } 

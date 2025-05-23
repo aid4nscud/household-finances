@@ -2,7 +2,17 @@
 
 import { createClient } from '@/utils/supabase/server'
 import { redirect } from 'next/navigation'
-import { SITE_URL } from '@/lib/constants'
+import { PRODUCTION_REDIRECT_URL, LOCAL_REDIRECT_URL } from '@/lib/constants'
+import { headers } from 'next/headers'
+
+// Determine the appropriate redirect URL based on the request
+function getRedirectUrl() {
+  const headersList = headers()
+  const host = headersList.get('host') || ''
+  
+  const isLocalhost = host.includes('localhost') || host.includes('127.0.0.1')
+  return isLocalhost ? LOCAL_REDIRECT_URL : PRODUCTION_REDIRECT_URL
+}
 
 export async function signIn(formData: FormData) {
   const supabase = createClient()
@@ -27,12 +37,15 @@ export async function signUp(formData: FormData) {
   
   const email = formData.get('email') as string
   const password = formData.get('password') as string
+  const redirectUrl = getRedirectUrl()
+  
+  console.log(`[Server] Using redirect URL for signup: ${redirectUrl}`)
   
   const { error } = await supabase.auth.signUp({
     email,
     password,
     options: {
-      emailRedirectTo: `${SITE_URL}/auth/callback`,
+      emailRedirectTo: redirectUrl,
     },
   })
   
@@ -45,14 +58,6 @@ export async function signUp(formData: FormData) {
 
 export async function signOut() {
   const supabase = createClient()
-  
-  // Make sure to clear cookies server-side
-  const { error } = await supabase.auth.signOut();
-  
-  if (error) {
-    console.error('Server action sign-out error:', error);
-  }
-  
-  // Redirect to home page even if there's an error
+  await supabase.auth.signOut()
   return redirect('/')
 } 

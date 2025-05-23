@@ -1,6 +1,6 @@
 import { createClient as createServiceSupabaseClient } from '@supabase/supabase-js'
-import { createClient as createServerClient } from '@/utils/supabase/server'
-import { createClient as createBrowserClient } from '@/utils/supabase/client'
+import { createClient as createServerSupabaseClient } from '@/utils/supabase/server'
+import { createClient as createBrowserSupabaseClient } from '@/utils/supabase/client'
 import { SESSION_EXPIRY } from './constants'
 
 // Check if Supabase URL and anon key are available
@@ -15,14 +15,14 @@ if (!supabaseUrl || !supabaseAnonKey) {
 
 console.log(`[Supabase] Creating client with URL: ${supabaseUrl}`)
 
-// Export the modern client creators
-export const createClient = createBrowserClient
-export const createServerSupabaseClient = createServerClient
+// Export renamed functions to avoid conflicts
+export const createBrowserClient = createBrowserSupabaseClient
+export const createServerClient = createServerSupabaseClient
 
 /**
- * @deprecated Use createClient() from utils/supabase/client.ts instead
+ * @deprecated Use createBrowserClient() instead
  */
-export const supabase = createBrowserClient()
+export const supabase = createBrowserSupabaseClient()
 
 // Log client creation
 console.log('[Supabase] Client created successfully')

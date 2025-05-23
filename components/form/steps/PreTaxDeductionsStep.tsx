@@ -21,14 +21,14 @@ const PreTaxDeductionsStep: React.FC<PreTaxDeductionsStepProps> = ({
 }) => {
   // Memoize rendered fields to prevent unnecessary re-renders
   const renderNumberField = useMemo(() => {
-    return (id: keyof FormData, label: string, placeholder = '0.00', tooltip: string | null = null) => {
+    return (id: Extract<keyof FormData, string>, label: string, placeholder = '0.00', tooltip: string | null = null, isRequired = false) => {
       const errorValue = errors[id] !== null ? errors[id] : undefined;
 
       return (
         <NumberField
           key={id}
           id={id}
-          name={id.toString()}
+          name={id}
           label={label}
           value={formData[id]}
           placeholder={placeholder}
@@ -38,6 +38,7 @@ const PreTaxDeductionsStep: React.FC<PreTaxDeductionsStepProps> = ({
           touched={touched[id]}
           disabled={isSubmitting}
           tooltip={tooltip}
+          isRequired={isRequired}
         />
       );
     };
@@ -51,19 +52,22 @@ const PreTaxDeductionsStep: React.FC<PreTaxDeductionsStepProps> = ({
           'federalIncomeTax', 
           'Federal Income Tax', 
           '800.00',
-          'Estimated monthly federal income tax withheld from your paycheck.'
+          'Estimated monthly federal income tax withheld from your paycheck.',
+          true
         )}
         {renderNumberField(
           'stateIncomeTax', 
           'State Income Tax', 
           '200.00',
-          'Estimated monthly state income tax withheld from your paycheck.'
+          'Estimated monthly state income tax withheld from your paycheck.',
+          true
         )}
         {renderNumberField(
           'ficaTax', 
           'FICA (Social Security + Medicare)', 
           '400.00',
-          'FICA taxes include Social Security (6.2%) and Medicare (1.45%) taxes.'
+          'FICA taxes include Social Security (6.2%) and Medicare (1.45%) taxes.',
+          true
         )}
         {renderNumberField(
           'retirementContributions', 

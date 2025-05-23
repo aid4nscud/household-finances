@@ -21,13 +21,13 @@ const IncomeStep: React.FC<IncomeStepProps> = ({
 }) => {
   // Memoize rendered fields to prevent unnecessary re-renders
   const renderNumberField = useMemo(() => {
-    return (id: keyof FormData, label: string, placeholder = '0.00', tooltip: string | null = null) => {
+    return (id: Extract<keyof FormData, string>, label: string, placeholder = '0.00', tooltip: string | null = null, isRequired = false) => {
       const errorValue = errors[id] !== null ? errors[id] : undefined;
       return (
         <NumberField
           key={id}
           id={id}
-          name={id.toString()}
+          name={id}
           label={label}
           value={formData[id]}
           placeholder={placeholder}
@@ -37,6 +37,7 @@ const IncomeStep: React.FC<IncomeStepProps> = ({
           touched={touched[id]}
           disabled={isSubmitting}
           tooltip={tooltip}
+          isRequired={isRequired}
         />
       );
     };
@@ -50,7 +51,8 @@ const IncomeStep: React.FC<IncomeStepProps> = ({
           'primaryIncome', 
           'Primary Income (Salary/Wages)', 
           '5000.00',
-          'Your main source of income, such as salary or wages. Enter the monthly amount before taxes.'
+          'Your main source of income, such as salary or wages. Enter the monthly amount before taxes.',
+          true
         )}
         {renderNumberField(
           'secondaryIncome', 

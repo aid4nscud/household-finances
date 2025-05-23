@@ -13,8 +13,9 @@ import { Skeleton } from '@/components/ui/skeleton';
 const IncomeStep = lazy(() => import('./steps/IncomeStep'));
 const PreTaxDeductionsStep = lazy(() => import('./steps/PreTaxDeductionsStep'));
 const EssentialNeedsStep = lazy(() => import('./steps/EssentialNeedsStep'));
+const CostToEarnStep = lazy(() => import('./steps/CostToEarnStep'));
 const SavingsInvestmentsStep = lazy(() => import('./steps/SavingsInvestmentsStep'));
-const DiscretionaryExpensesStep = lazy(() => import('./steps/DiscretionaryExpensesStep'));
+const LifestyleDividendsStep = lazy(() => import('./steps/LifestyleDividendsStep'));
 const AnnualExpensesStep = lazy(() => import('./steps/AnnualExpensesStep'));
 const AdditionalInfoStep = lazy(() => import('./steps/AdditionalInfoStep'));
 const ReviewStep = lazy(() => import('./steps/ReviewStep'));
@@ -292,10 +293,12 @@ const DynamicForm: React.FC<DynamicFormProps> = ({
         return <PreTaxDeductionsStep {...stepProps} />;
       case 'essentialNeeds':
         return <EssentialNeedsStep {...stepProps} />;
+      case 'costToEarn':
+        return <CostToEarnStep {...stepProps} />;
       case 'savingsInvestments':
         return <SavingsInvestmentsStep {...stepProps} />;
-      case 'discretionaryExpenses':
-        return <DiscretionaryExpensesStep {...stepProps} />;
+      case 'lifestyleDividends':
+        return <LifestyleDividendsStep {...stepProps} />;
       case 'annualExpenses':
         return <AnnualExpensesStep {...stepProps} />;
       case 'additionalInfo':

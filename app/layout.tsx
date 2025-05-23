@@ -1,6 +1,5 @@
 import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
-import { createClient } from '@/utils/supabase/server'
 import { AuthProvider } from '@/components/auth/auth-provider'
 import { Toaster } from '@/components/ui/toaster'
 import { ThemeProvider } from '@/components/theme-provider'
@@ -14,19 +13,16 @@ export const metadata: Metadata = {
   description: 'Analyze your household finances with business-level clarity and align spending with your values',
 }
 
-export default async function RootLayout({
+export default function RootLayout({
   children,
 }: {
   children: React.ReactNode
 }) {
-  const supabase = createClient()
-  const { data: { session } } = await supabase.auth.getSession()
-
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={`${inter.className} min-h-screen bg-background antialiased`}>
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-          <AuthProvider initialSession={session}>
+          <AuthProvider>
             {children}
           </AuthProvider>
           <Toaster />

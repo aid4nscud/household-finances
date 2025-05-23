@@ -20,28 +20,35 @@ export default async function SignInPage({ searchParams }: SignInPageProps) {
   const errorMessage = searchParams.error
   
   return (
-    <>
-      <div className="text-center mb-8">
+    <div className="w-full max-w-sm mx-auto">
+      <div className="mb-8 text-center">
         <Link href="/" className="inline-block">
-          <h1 className="text-4xl font-bold bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">ValYou</h1>
+          <div className="flex items-center justify-center">
+            <span className="text-2xl font-bold text-gray-900 dark:text-white">
+              <span className="text-[#00C805]">Val</span>You
+            </span>
+          </div>
         </Link>
       </div>
       
-      <div className="backdrop-blur-sm bg-white/30 border border-gray-100/50 shadow-lg rounded-2xl overflow-hidden w-full max-w-md mx-auto">
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
         {errorMessage && (
-          <div className="bg-red-50/80 border-l-4 border-red-400 p-4 backdrop-blur-sm">
-            <p className="text-sm text-red-700">{decodeURIComponent(errorMessage)}</p>
+          <div className="p-3 bg-red-50 dark:bg-red-900/20 border-b border-red-100 dark:border-red-800/30">
+            <p className="text-sm text-red-600 dark:text-red-400">{decodeURIComponent(errorMessage)}</p>
           </div>
         )}
         
-        <div className="p-6 pt-5">
-          <div className="text-center mb-6">
-            <h2 className="text-2xl font-semibold text-gray-900">Welcome back</h2>
+        <div className="p-6">
+          <div className="text-center mb-5">
+            <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Welcome back</h2>
+            <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+              Sign in to continue to your dashboard
+            </p>
           </div>
           
           <AuthForm mode="signIn" />
         </div>
       </div>
-    </>
+    </div>
   )
 } 

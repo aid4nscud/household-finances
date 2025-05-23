@@ -33,6 +33,17 @@ export interface FormData {
   debtPayments: string;
   personalCareMedical: string;
   
+  // Cost to Earn (C2E) Specific Categories
+  commutingTransportation: string;     // Gas, public transit, parking for work
+  workTechnology: string;              // Cell phone, computer, software for work
+  dependentCare: string;               // Childcare while working
+  workShelterUtilities: string;        // Portion of housing/utilities for work
+  workAttire: string;                  // Work clothing, dry cleaning
+  workMeals: string;                   // Lunches at work, coffee
+  licensingEducation: string;          // Professional dues, certifications
+  workHealthWellness: string;          // Health costs required to work
+  workDebtObligations: string;         // Student loans, work vehicle loans
+  
   // Savings & Investments
   shortTermSavings: string;
   longTermInvestments: string;
@@ -40,15 +51,20 @@ export interface FormData {
   charitableGiving: string;
   retirementSavings: string;
   
-  // Wants / Discretionary Expenses
-  entertainmentLeisure: string;
-  diningOut: string;
-  shoppingPersonal: string;
-  fitnessWellness: string;
-  travelVacations: string;
-  subscriptions: string;
-  hobbiesRecreation: string;
-  giftsSupport: string;
+  // Lifestyle Dividends (Discretionary Expenses)
+  foodEntertainment: string;           // Dining out, takeout, movies, events
+  travelExperiences: string;           // Vacations, hotels, weekend trips
+  subscriptionsMemberships: string;    // Streaming, subscription boxes, gym
+  homeLivingDecor: string;             // Furniture, décor, home upgrades
+  clothingStyle: string;               // Fashion, accessories, seasonal wear
+  fitnessWellness: string;             // Massage, yoga, boutique fitness
+  giftsCelebrations: string;           // Gifts, parties, holidays
+  hobbiesRecreation: string;           // Sports, crafts, games, creative hobbies
+  beautySelfCare: string;              // Haircuts, skincare, cosmetics, nails
+  convenienceTimeSavers: string;       // Meal kits, cleaning help, lawn services
+  petCare: string;                     // Pet food, grooming, vet visits
+  kidsSchooling: string;               // Private tuition, music, sports, dance
+  philanthropyFamilySupport: string;   // Charitable giving, helping family
   
   // Annual or Irregular Expenses
   annualLicenses: string;
@@ -70,6 +86,9 @@ export interface FormData {
   totalNetWorth: string;
   savingsRate: string;
   debtToIncomeRatio: string;
+
+  // Cost to Earn settings
+  [key: string]: string | any;
 }
 
 export interface NumericFormData extends Omit<FormData, 'name' | 'email'> {
@@ -121,6 +140,30 @@ export interface IncomeStatement {
     totalPreTaxDeductions: CurrencyField;
   };
   netRevenue: CurrencyField;
+  costToEarn: {
+    housingC2E: CurrencyField;
+    utilitiesC2E: CurrencyField;
+    transportationC2E: CurrencyField;
+    childcareC2E: CurrencyField;
+    professionalDevC2E: CurrencyField;
+    licensesC2E: CurrencyField;
+    internetC2E: CurrencyField;
+    otherC2E: CurrencyField;
+    
+    // Added detailed C2E categories
+    commutingTransportation: CurrencyField;
+    workTechnology: CurrencyField;
+    dependentCare: CurrencyField;
+    workShelterUtilities: CurrencyField;
+    workAttire: CurrencyField;
+    workMeals: CurrencyField;
+    licensingEducation: CurrencyField;
+    workHealthWellness: CurrencyField;
+    workDebtObligations: CurrencyField;
+    
+    totalC2E: CurrencyField;
+    percentOfIncome?: string;
+  };
   essentialNeeds: {
     housingExpenses: CurrencyField;
     utilities: CurrencyField;
@@ -145,6 +188,7 @@ export interface IncomeStatement {
   };
   grossProfit: CurrencyField;
   discretionaryExpenses: {
+    // Legacy fields
     entertainmentLeisure: CurrencyField;
     diningOut: CurrencyField;
     shoppingPersonal: CurrencyField;
@@ -153,6 +197,20 @@ export interface IncomeStatement {
     subscriptions: CurrencyField;
     hobbiesRecreation: CurrencyField;
     giftsSupport: CurrencyField;
+    
+    // New Lifestyle Dividends categories
+    foodEntertainment: CurrencyField;
+    travelExperiences: CurrencyField;
+    subscriptionsMemberships: CurrencyField;
+    homeLivingDecor: CurrencyField;
+    clothingStyle: CurrencyField;
+    giftsCelebrations: CurrencyField;
+    beautySelfCare: CurrencyField;
+    convenienceTimeSavers: CurrencyField;
+    petCare: CurrencyField;
+    kidsSchooling: CurrencyField;
+    philanthropyFamilySupport: CurrencyField;
+    
     totalWantsExpenses: CurrencyField;
     percentOfIncome?: string;
   };
@@ -174,7 +232,6 @@ export interface IncomeStatement {
     savings: RecommendationField;
   };
   financialRatios?: Record<string, string>;
-  valueChainOpportunities?: ValueCategory[];
   insights: string[] | Insight[];
   id?: string;
   created_at?: string;
@@ -194,15 +251,6 @@ interface RecommendationField {
   actual: string;
   difference: string;
   status: 'good' | 'high' | 'low';
-}
-
-export interface ValueCategory {
-  id?: string;
-  name: string;
-  spending: number;
-  monthlyAmount?: number;
-  valueAlignment?: string;
-  recommendations: string[];
 }
 
 // Preserve the existing StatementData type for backward compatibility
@@ -228,6 +276,18 @@ export interface StatementData {
     totalPreTaxDeductions: CurrencyField;
   };
   netRevenue: CurrencyField;
+  costToEarn?: {
+    housingC2E: CurrencyField;
+    utilitiesC2E: CurrencyField;
+    transportationC2E: CurrencyField;
+    childcareC2E: CurrencyField;
+    professionalDevC2E: CurrencyField;
+    licensesC2E: CurrencyField;
+    internetC2E: CurrencyField;
+    otherC2E: CurrencyField;
+    totalC2E: CurrencyField;
+    percentOfIncome?: string;
+  };
   essentialNeeds: {
     housingExpenses: CurrencyField;
     utilities: CurrencyField;
@@ -290,21 +350,22 @@ export interface FormStep {
 export interface NumberFieldProps {
   id: string;
   label: string;
-  name: string;
+  name?: string;
   value: string;
+  placeholder?: string;
+  min?: number;
+  max?: number;
+  step?: number;
   onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   onBlur: (e: React.FocusEvent<HTMLInputElement>) => void;
   error?: string;
   touched?: boolean;
-  disabled?: boolean;
-  placeholder?: string;
-  min?: string | number;
-  max?: string | number;
-  step?: string | number;
   description?: string;
   prefix?: string;
   suffix?: string;
+  disabled?: boolean;
   tooltip?: string | null;
+  isRequired?: boolean;
 }
 
 export interface ProgressBarProps {
@@ -328,4 +389,12 @@ export interface SummaryItemProps {
 export interface InsightItemProps {
   insight: Insight;
   index: number;
+}
+
+export interface NumberFieldWithC2EProps extends NumberFieldProps {
+  showC2EToggle?: boolean;
+  isC2E?: boolean;
+  c2ePercentage?: number;
+  onC2EChange?: (isC2E: boolean, percentage?: number) => void;
+  isRequired?: boolean;
 } 
