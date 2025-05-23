@@ -4,12 +4,15 @@ import { useState, useEffect } from 'react'
 import { useAuth } from '@/components/auth/auth-provider'
 import type { AuthError } from '@supabase/supabase-js'
 import { Button } from '@/components/ui/button'
+import { createClient } from '@/utils/supabase/client'
 
 export default function AuthDebugPage() {
-  const { supabase, session, user, isLoading } = useAuth()
+  const { session, user, isLoading } = useAuth()
   const [error, setError] = useState<AuthError | Error | null>(null)
   const [logs, setLogs] = useState<string[]>([])
   const [cookies, setCookies] = useState<{name: string, value: string}[]>([])
+  const [isMounted, setIsMounted] = useState(false)
+  const supabase = createClient()
   
   // Add a log entry
   const addLog = (message: string) => {
@@ -32,6 +35,8 @@ export default function AuthDebugPage() {
 
   // Test the authentication state
   useEffect(() => {
+    setIsMounted(true)
+    
     if (isLoading) {
       addLog('Loading authentication state...')
     } else if (session) {
@@ -55,7 +60,16 @@ export default function AuthDebugPage() {
     return () => {
       authListener?.subscription.unsubscribe()
     }
-  }, [isLoading, session, supabase.auth, user])
+  }, [isLoading, session, user])
+
+  // If not mounted yet, return a simple loading state that matches server-side render
+  if (!isMounted) {
+    return (
+      <div className="container mx-auto p-6 max-w-4xl">
+        <h1 className="text-3xl font-bold mb-6">Loading...</h1>
+      </div>
+    )
+  }
 
   // Force re-check of session
   const recheckSession = async () => {
@@ -106,50 +120,15 @@ export default function AuthDebugPage() {
       )}
 
       <div className="mb-8">
-        <h2 className="text-xl font-semibold mb-2">Cookies {cookies.length > 0 && `(${cookies.length})`}</h2>
+        <h2 className="text-xl font-semibold mb-2">Cookies</h2>
         <div className="bg-gray-100 rounded p-4 max-h-60 overflow-y-auto">
-          {cookies.length > 0 ? (
-            <table className="w-full">
-              <thead>
-                <tr className="text-left">
-                  <th className="pb-2">Name</th>
-                  <th className="pb-2">Value</th>
-                </tr>
-              </thead>
-              <tbody>
-                {cookies.map((cookie, i) => (
-                  <tr key={i} className={`border-t border-gray-200 ${cookie.name.startsWith('sb-') ? 'bg-blue-50' : ''}`}>
-                    <td className="py-2 pr-4">{cookie.name}</td>
-                    <td className="py-2">{cookie.value}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          ) : (
-            <p>No cookies found</p>
-          )}
+          {cookies.map((cookie, i) => (
+            <div key={i} className="py-1 border-b border-gray-200 last:border-0">
+              <span className="font-mono text-sm">{cookie.name}</span>: {cookie.value}
+            </div>
+          ))}
         </div>
       </div>
-
-      {user && (
-        <div className="mb-8">
-          <h2 className="text-xl font-semibold mb-2">User Information</h2>
-          <div className="bg-gray-100 rounded p-4">
-            <pre className="whitespace-pre-wrap">{JSON.stringify(user, null, 2)}</pre>
-          </div>
-        </div>
-      )}
-
-      {session && (
-        <div className="mb-8">
-          <h2 className="text-xl font-semibold mb-2">Session Information</h2>
-          <div className="bg-gray-100 rounded p-4">
-            <p>Expires at: {session.expires_at ? new Date(session.expires_at * 1000).toLocaleString() : 'Unknown'}</p>
-            <p>Access token: {session.access_token ? `${session.access_token.substring(0, 20)}...` : 'None'}</p>
-            <p>Refresh token: {session.refresh_token ? `${session.refresh_token.substring(0, 10)}...` : 'None'}</p>
-          </div>
-        </div>
-      )}
 
       <div className="mb-8">
         <h2 className="text-xl font-semibold mb-2">Logs</h2>

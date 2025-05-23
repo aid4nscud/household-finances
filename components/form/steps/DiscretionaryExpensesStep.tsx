@@ -25,8 +25,8 @@ const DiscretionaryExpensesStep: React.FC<DiscretionaryExpensesStepProps> = ({
       const errorValue = errors[id] !== null ? errors[id] : undefined;
       return (
         <NumberField
-          key={id}
-          id={id}
+          key={id.toString()}
+          id={id.toString()}
           name={id.toString()}
           label={label}
           value={formData[id]}

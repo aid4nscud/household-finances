@@ -43,18 +43,14 @@ const SummaryItem: React.FC<SummaryItemProps> = ({
   }
 
   return (
-    <div className={`${bgColor} p-6 rounded-2xl border transition-all duration-200 ${accentColor}`}>
-      <div className="flex flex-col">
-        <div className="flex justify-between items-start mb-3">
-          <p className="text-xs font-medium tracking-wider text-gray-500 dark:text-gray-400 uppercase">{title}</p>
-          <div className={`${iconBg} p-2 rounded-xl`}>
-            <Icon className={`h-5 w-5 ${textColor}`} />
-          </div>
-        </div>
-        <p className={`text-2xl font-medium ${type === 'income' || type === 'savings' || type === 'c2e' ? 'text-[#00C805]' : type === 'expense' ? 'text-red-500' : 'text-gray-900 dark:text-white'}`}>
-          {value}
-        </p>
-        <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">{subtitle}</p>
+    <div className={`flex items-center justify-between p-6 rounded-2xl border ${accentColor} ${bgColor} transition-all duration-200`}>
+      <div className="space-y-1.5">
+        <h3 className={`font-medium ${textColor}`}>{title}</h3>
+        <p className="text-2xl font-semibold text-gray-900 dark:text-white">{value}</p>
+        <p className="text-sm text-gray-500 dark:text-gray-400">{subtitle}</p>
+      </div>
+      <div className={`${iconBg} p-3 rounded-xl`}>
+        <Icon className={`h-5 w-5 ${textColor}`} aria-hidden="true" />
       </div>
     </div>
   );

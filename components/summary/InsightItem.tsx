@@ -22,7 +22,7 @@ const InsightItem: React.FC<InsightItemProps> = ({ content }) => {
     if (lowerText.includes('deficit') || lowerText.includes('below') || lowerText.includes('above recommended')) {
       return {
         type: 'alert',
-        icon: <AlertTriangle className="h-5 w-5" />,
+        icon: <AlertTriangle className="h-5 w-5" aria-hidden="true" />,
         colors: {
           bg: 'bg-red-50 dark:bg-red-500/5',
           border: 'border-red-100 dark:border-red-500/10 hover:border-red-200 dark:hover:border-red-500/20',
@@ -35,7 +35,7 @@ const InsightItem: React.FC<InsightItemProps> = ({ content }) => {
     if (lowerText.includes('consider') || lowerText.includes('could') || lowerText.includes('may')) {
       return {
         type: 'warning',
-        icon: <Info className="h-5 w-5" />,
+        icon: <Info className="h-5 w-5" aria-hidden="true" />,
         colors: {
           bg: 'bg-yellow-50 dark:bg-yellow-500/5',
           border: 'border-yellow-100 dark:border-yellow-500/10 hover:border-yellow-200 dark:hover:border-yellow-500/20',
@@ -48,7 +48,7 @@ const InsightItem: React.FC<InsightItemProps> = ({ content }) => {
     if (lowerText.includes('healthy') || lowerText.includes('exceeds') || lowerText.includes('effectively')) {
       return {
         type: 'positive',
-        icon: <CheckCircle className="h-5 w-5" />,
+        icon: <CheckCircle className="h-5 w-5" aria-hidden="true" />,
         colors: {
           bg: 'bg-[#00C805]/5',
           border: 'border-[#00C805]/20 hover:border-[#00C805]/40',

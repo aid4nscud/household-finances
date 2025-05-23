@@ -17,7 +17,7 @@ export default async function AuthLayout({
       
       {/* Main content */}
       <div className="w-full max-w-md mx-auto px-4">
-        <AuthProvider initialSession={session}>
+        <AuthProvider>
           {children}
         </AuthProvider>
       </div>

@@ -26,8 +26,8 @@ const SavingsInvestmentsStep: React.FC<SavingsInvestmentsStepProps> = ({
 
       return (
         <NumberField
-          key={id}
-          id={id}
+          key={id.toString()}
+          id={id.toString()}
           name={id.toString()}
           label={label}
           value={formData[id]}

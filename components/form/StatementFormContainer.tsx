@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useStatements } from '@/hooks/useStatements'
 import DynamicForm from '@/components/form/DynamicForm'
@@ -20,13 +20,33 @@ export function StatementFormContainer({
   existingStatement?: any;
 }) {
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [isMounted, setIsMounted] = useState(false)
   const router = useRouter()
   const { createStatement, updateStatement } = useStatements()
   const { toast } = useToast()
   const [formError, setFormError] = useState<string | null>(null)
-  const { session: authSession, user: authUser, refreshSession } = useAuth()
+  const { session: authSession, user: authUser } = useAuth()
+  const supabase = createClient()
   
   const isEditMode = !!existingStatement
+
+  // Add useEffect to handle client-side mounting
+  useEffect(() => {
+    setIsMounted(true)
+  }, [])
+
+  // If not mounted yet, return a simple loading state that matches server-side render
+  if (!isMounted) {
+    return (
+      <div className="py-8 animate-fadeIn">
+        <div className="mb-12">
+          <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-gray-900 dark:text-white">
+            Loading...
+          </h1>
+        </div>
+      </div>
+    )
+  }
 
   const handleSubmit = async (formData: NumericFormData) => {
     console.log('StatementFormContainer received form submission', formData);
@@ -44,12 +64,12 @@ export function StatementFormContainer({
         
         // Try to refresh the session proactively - this is essential for form submissions
         try {
-          const refreshedSession = await refreshSession();
+          const { data: { session } } = await supabase.auth.getSession()
           
-          if (refreshedSession) {
-            console.log('Successfully refreshed session for user:', refreshedSession.user.email);
-            currentSession = refreshedSession;
-            currentUser = refreshedSession.user;
+          if (session) {
+            console.log('Successfully refreshed session for user:', session.user.email);
+            currentSession = session;
+            currentUser = session.user;
           } else {
             throw new Error('Session refresh failed');
           }
@@ -486,10 +506,10 @@ export function StatementFormContainer({
             </p>
           </div>
           
-          {isEditMode && (
+          {isEditMode && isMounted && (
             <div className="mt-4 md:mt-0">
               <Badge className="px-3 py-1 text-sm flex items-center gap-1.5 bg-[#00C805]/10 border-[#00C805]/20 text-[#00C805]">
-                <PenLine className="h-3.5 w-3.5" />
+                <PenLine className="h-3.5 w-3.5" aria-hidden="true" />
                 <span>Editing Statement</span>
               </Badge>
             </div>

@@ -30,133 +30,42 @@ export function useStatements() {
   const [error, setError] = useState<Error | null>(null)
   const { toast } = useToast()
   const router = useRouter()
-  const { refreshSession } = useAuth()
+  const { session } = useAuth()
 
   // Create a new income statement
   const createStatement = async (statementData: any) => {
-    setIsLoading(true)
-    setError(null)
-
     try {
-      // Check authentication before proceeding
-      const { session, error: authError } = await getAuthenticatedSession()
-      
-      if (authError) {
-        console.error('Authentication error details:', authError)
-        
-        // Try to refresh the session using auth context
-        try {
-          console.log('Attempting to refresh session via AuthProvider...')
-          const refreshedSession = await refreshSession()
-          
-          if (refreshedSession) {
-            console.log('Successfully refreshed session via AuthProvider')
-            // Continue with the refreshed session
-            const userId = refreshedSession.user.id
-            
-            // Insert the data
-            const { data: insertData, error: insertError } = await supabase
-              .from('income_statements')
-              .insert({
-                user_id: userId,
-                statement_data: statementData
-              })
-              .select('id')
-              .single()
-            
-            if (insertError) {
-              throw new Error(`Database error: ${insertError.message}`)
-            }
-            
-            if (!insertData || !insertData.id) {
-              throw new Error('Failed to create statement: No ID returned from database')
-            }
-            
-            toast({
-              title: "Success!",
-              description: "Your income statement has been created successfully.",
-              variant: "default",
-              duration: 5000,
-            })
-            
-            setIsLoading(false)
-            return insertData.id
-          }
-        } catch (refreshErr) {
-          console.error('AuthProvider refresh attempt failed:', refreshErr)
+      // Check if we have a valid session
+      if (!session) {
+        // Try to refresh the session
+        const { data: { session: newSession } } = await supabase.auth.getSession()
+        if (!newSession) {
+          throw new Error('No valid session')
         }
-        
-        // If we reach here, the refresh failed
-        toast({
-          title: "Session Expired",
-          description: "Your session has expired. Please sign in again.",
-          variant: "destructive",
-          duration: 5000,
-        })
-        
-        // Navigate to sign-in
-        setTimeout(() => {
-          router.push('/sign-in')
-        }, 1000)
-        
-        throw new Error('Authentication error: ' + authError.message)
       }
-      
-      if (!session || !session.user) {
-        console.error('No valid session found')
-        throw new Error('You must be logged in to create a statement.')
-      }
-      
-      const userId = session.user.id
-      console.log('Creating statement for user ID:', userId)
-      
-      // Insert the data
+
       const { data, error } = await supabase
         .from('income_statements')
-        .insert({
-          user_id: userId,
-          statement_data: statementData
-        })
-        .select('id')
+        .insert([statementData])
+        .select()
         .single()
-      
-      if (error) {
-        console.error('Database error while creating statement:', error)
-        throw new Error(`Database error: ${error.message}`)
-      }
-      
-      if (!data || !data.id) {
-        throw new Error('Failed to create statement: No ID returned from database')
-      }
-      
+
+      if (error) throw error
+
       toast({
-        title: "Success!",
-        description: "Your income statement has been created successfully.",
-        variant: "default",
-        duration: 5000,
+        title: 'Success',
+        description: 'Statement created successfully',
       })
-      
-      setIsLoading(false)
-      return data.id
-    } catch (err) {
-      console.error('Error in createStatement:', err)
-      setIsLoading(false)
-      
-      const errorMessage = err instanceof Error 
-        ? err.message 
-        : 'An unknown error occurred while creating your statement'
-      setError(new Error(errorMessage))
-      
-      if (!errorMessage.includes('Authentication error')) {
-        toast({
-          title: "Error",
-          description: errorMessage,
-          variant: "destructive",
-          duration: 5000,
-        })
-      }
-      
-      return null
+
+      return data
+    } catch (error) {
+      console.error('Error creating statement:', error)
+      toast({
+        title: 'Error',
+        description: error instanceof Error ? error.message : 'Failed to create statement',
+        variant: 'destructive',
+      })
+      throw error
     }
   }
 

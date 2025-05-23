@@ -14,7 +14,7 @@ import { Badge } from '@/components/ui/badge'
 // Dashboard skeleton loading state
 function DashboardSkeleton() {
   return (
-    <div className="animate-fadeIn py-8">
+    <div className="animate-fadeIn min-h-[85vh] pt-24 pb-12">
       <div className="flex flex-col space-y-2 mb-8">
         <Skeleton className="h-10 w-[300px]" />
         <Skeleton className="h-6 w-[200px]" />
@@ -68,48 +68,18 @@ interface StatementData {
   };
 }
 
-// User info display component
-function UserInfoCard({ user }: { user: any }) {
-  if (!user) return null;
-  
-  return (
-    <div className="mb-8 p-6 bg-gray-50 dark:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-700">
-      <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-4">
-        USER DETAILS (FOR DEMO PURPOSES ONLY)
-      </h3>
-      <div className="space-y-3 text-sm">
-        <div>
-          <span className="font-semibold">ID:</span> {user.id}
-        </div>
-        <div>
-          <span className="font-semibold">Email:</span> {user.email}
-        </div>
-        <div>
-          <span className="font-semibold">Email Confirmed:</span> {user.email_confirmed_at ? 'Yes' : 'No'}
-        </div>
-        <div>
-          <span className="font-semibold">Auth Provider:</span> {user.app_metadata?.provider || 'email'}
-        </div>
-        <div>
-          <span className="font-semibold">Created:</span> {new Date(user.created_at).toLocaleString()}
-        </div>
-      </div>
-    </div>
-  );
-}
-
 // Empty state component
 function EmptyState() {
   return (
     <div className="rounded-2xl bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 hover:border-[#00C805]/30 dark:hover:border-[#00C805]/30 transition-all duration-200 p-12 text-center">
       <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-[#00C805]/5 text-[#00C805]">
-        <FileText className="h-8 w-8" />
+        <FileText className="h-8 w-8" aria-hidden="true" />
       </div>
       <h3 className="mt-6 text-xl font-semibold tracking-tight text-gray-900 dark:text-white">
-        No Statements Found
+        No Financial Statements Found
       </h3>
       <p className="mt-3 text-sm leading-relaxed text-gray-500 dark:text-gray-400 max-w-sm mx-auto">
-        You haven't created any financial statements yet. Create your first statement to track your household finances and align spending with your values.
+        Start managing your household finances like a business. Create your first financial statement to track revenue, expenses, and profit margins.
       </p>
       <div className="mt-8">
         <Link href="/dashboard/create">
@@ -117,8 +87,8 @@ function EmptyState() {
             size="lg"
             className="bg-[#00C805] hover:bg-[#00B305] text-white shadow-none h-11 px-8 rounded-full"
           >
-            <PlusCircle className="mr-2.5 h-5 w-5" />
-            Create Your First Statement
+            <PlusCircle className="mr-2.5 h-5 w-5" aria-hidden="true" />
+            Create First Financial Statement
           </Button>
         </Link>
       </div>
@@ -129,7 +99,6 @@ function EmptyState() {
 async function Dashboard() {
   // Get the current user
   const user = await getCurrentUser()
-  console.log('User data:', JSON.stringify(user, null, 2))
   
   // Try to get the most recent statement
   let latestStatement: StatementData | null = null
@@ -152,19 +121,12 @@ async function Dashboard() {
   }
   
   return (
-    <div className="py-12">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <main className="min-h-[85vh] flex flex-col">
+      <div className="flex-grow pt-24 pb-12 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto w-full">
         <div className="space-y-12">
-          {/* User info for debugging */}
-          {user && process.env.NODE_ENV === 'development' && (
-            <div className="space-y-6">
-              <UserInfoCard user={user} />
-            </div>
-          )}
-          
           {/* Error state */}
           {statementError && (
-            <div className="space-y-6">
+            <div className="mb-12">
               <Alert variant="destructive" className="border-red-200 bg-red-50 dark:bg-red-900/10">
                 <AlertTitle className="mb-2 text-red-800 dark:text-red-200">Error fetching statements</AlertTitle>
                 <AlertDescription className="text-red-700 dark:text-red-300">{statementError}</AlertDescription>
@@ -173,17 +135,17 @@ async function Dashboard() {
           )}
           
           {/* Page header with semantic structure */}
-          <section aria-labelledby="dashboard-heading" className="space-y-4">
+          <section aria-labelledby="dashboard-heading" className="space-y-6">
             <div className="flex flex-col md:flex-row md:items-center md:justify-between">
               <div className="space-y-4">
                 <h1 
                   id="dashboard-heading" 
                   className="text-3xl sm:text-4xl font-bold tracking-tight text-gray-900 dark:text-white"
                 >
-                  Household Dashboard
+                  Household Financial Operations
                 </h1>
                 <p className="text-gray-600 dark:text-gray-300 text-base sm:text-lg">
-                  Track your household profit margin and align your spending with your values.
+                  Manage your household like a CEO. Track profit margins, optimize operations, and make data-driven decisions.
                 </p>
               </div>
             </div>
@@ -204,7 +166,7 @@ async function Dashboard() {
                   id="latest-statement-heading"
                   className="text-2xl font-medium text-gray-900 dark:text-white flex items-center gap-2"
                 >
-                  Latest Financial Statement
+                  Current Financial Period
                   <Badge variant="outline" className="font-normal bg-[#00C805]/5 text-[#00C805] border-[#00C805]/20">
                     {new Date(latestStatement.created_at).toLocaleDateString()}
                   </Badge>
@@ -217,8 +179,8 @@ async function Dashboard() {
                       className="h-11 rounded-full border-gray-200 hover:border-[#00C805] hover:bg-[#00C805]/5 hover:text-[#00C805] text-gray-700 dark:border-gray-700 dark:hover:border-[#00C805] dark:text-gray-200"
                     >
                       <div className="flex items-center px-5">
-                        <Eye className="h-4 w-4 flex-shrink-0" />
-                        <span className="ml-4">View Details</span>
+                        <Eye className="h-4 w-4 flex-shrink-0" aria-hidden="true" />
+                        <span className="ml-4">View Financial Report</span>
                       </div>
                     </Button>
                   </Link>
@@ -228,8 +190,8 @@ async function Dashboard() {
                       className="h-11 rounded-full bg-[#00C805] hover:bg-[#00B305] text-white shadow-none"
                     >
                       <div className="flex items-center px-5">
-                        <PenLine className="h-4 w-4 flex-shrink-0" />
-                        <span className="ml-4">Update Statement</span>
+                        <PenLine className="h-4 w-4 flex-shrink-0" aria-hidden="true" />
+                        <span className="ml-4">Update Financial Data</span>
                       </div>
                     </Button>
                   </Link>
@@ -244,15 +206,15 @@ async function Dashboard() {
                     <div className="flex justify-between items-start">
                       <div className="space-y-4">
                         <div className="flex items-center gap-2">
-                          <p className="text-xs font-medium tracking-wider text-gray-500 dark:text-gray-400 uppercase">GROSS REVENUE</p>
-                          <Info className="h-3.5 w-3.5 text-gray-400" />
+                          <p className="text-xs font-medium tracking-wider text-gray-500 dark:text-gray-400 uppercase">TOTAL REVENUE</p>
+                          <Info className="h-3.5 w-3.5 text-gray-400" aria-hidden="true" />
                         </div>
                         <p className="text-2xl font-medium text-gray-900 dark:text-white">
                           {latestStatement.statement_data.income.grossRevenue.formatted}
                         </p>
                       </div>
                       <div className="bg-[#00C805]/5 p-3 rounded-xl">
-                        <TrendingUp className="h-5 w-5 text-[#00C805]" />
+                        <TrendingUp className="h-5 w-5 text-[#00C805]" aria-hidden="true" />
                       </div>
                     </div>
                   </div>
@@ -270,7 +232,7 @@ async function Dashboard() {
                         </p>
                       </div>
                       <div className="bg-[#00C805]/5 p-3 rounded-xl">
-                        <BarChart3 className="h-5 w-5 text-[#00C805]" />
+                        <BarChart3 className="h-5 w-5 text-[#00C805]" aria-hidden="true" />
                       </div>
                     </div>
                   </div>
@@ -281,8 +243,8 @@ async function Dashboard() {
                       <div className="flex justify-between items-start">
                         <div className="space-y-4">
                           <div className="flex items-center gap-2">
-                            <p className="text-xs font-medium tracking-wider text-gray-500 dark:text-gray-400 uppercase">OPERATING MARGIN</p>
-                            <Info className="h-3.5 w-3.5 text-gray-400" />
+                            <p className="text-xs font-medium tracking-wider text-gray-500 dark:text-gray-400 uppercase">OPERATING REVENUE</p>
+                            <Info className="h-3.5 w-3.5 text-gray-400" aria-hidden="true" />
                           </div>
                           <div className="space-y-2">
                             <p className="text-2xl font-medium text-gray-900 dark:text-white">
@@ -306,7 +268,7 @@ async function Dashboard() {
                           </div>
                         </div>
                         <div className="bg-[#00C805]/5 p-3 rounded-xl">
-                          <TrendingUp className="h-5 w-5 text-[#00C805]" />
+                          <TrendingUp className="h-5 w-5 text-[#00C805]" aria-hidden="true" />
                         </div>
                       </div>
                     </div>
@@ -322,9 +284,9 @@ async function Dashboard() {
                       <div className="space-y-4">
                         <div className="flex items-center gap-2">
                           <p className="text-xs font-medium tracking-wider text-gray-500 dark:text-gray-400 uppercase">
-                            NET HOUSEHOLD PROFIT
+                            NET PROFIT MARGIN
                           </p>
-                          <Info className="h-3.5 w-3.5 text-gray-400" />
+                          <Info className="h-3.5 w-3.5 text-gray-400" aria-hidden="true" />
                         </div>
                         <p className={`text-2xl font-medium ${
                           latestStatement.statement_data.finalNetIncome.value >= 0 
@@ -343,7 +305,7 @@ async function Dashboard() {
                           latestStatement.statement_data.finalNetIncome.value >= 0 
                             ? 'text-[#00C805]' 
                             : 'text-red-500'
-                        }`} />
+                        }`} aria-hidden="true" />
                       </div>
                     </div>
                   </div>
@@ -368,7 +330,7 @@ async function Dashboard() {
                             <div className="flex gap-4">
                               <div className="flex-shrink-0">
                                 <div className="w-10 h-10 rounded-full bg-[#00C805]/5 flex items-center justify-center">
-                                  <Info className="h-5 w-5 text-[#00C805]" />
+                                  <Info className="h-5 w-5 text-[#00C805]" aria-hidden="true" />
                                 </div>
                               </div>
                               <p className="text-sm text-gray-700 dark:text-gray-200 leading-relaxed">
@@ -397,10 +359,10 @@ async function Dashboard() {
                       </div>
                       <div className="space-y-2">
                         <CardTitle className="text-lg font-medium text-gray-900 dark:text-white">
-                          Update Statement
+                          Update Financial Records
                         </CardTitle>
                         <CardDescription className="text-gray-500 dark:text-gray-400">
-                          Keep your financial data current by updating your income and expenses.
+                          Maintain accurate financial records by updating your revenue streams, operational costs, and profit metrics.
                         </CardDescription>
                       </div>
                     </div>
@@ -408,8 +370,8 @@ async function Dashboard() {
                       <Button 
                         className="w-full bg-[#00C805] hover:bg-[#00B305] text-white shadow-none h-11 px-6 rounded-full"
                       >
-                        <span>Update Statement</span>
-                        <ArrowRight className="ml-2.5 h-5 w-5" />
+                        <span>Update Financial Records</span>
+                        <ArrowRight className="ml-2.5 h-5 w-5" aria-hidden="true" />
                       </Button>
                     </Link>
                   </div>
@@ -419,6 +381,6 @@ async function Dashboard() {
           )}
         </div>
       </div>
-    </div>
+    </main>
   )
 } 
