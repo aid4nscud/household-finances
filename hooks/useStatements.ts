@@ -59,17 +59,21 @@ export function useStatements() {
       const { data, error } = await supabase
         .from('income_statements')
         .insert([dbRecord])
-        .select()
+        .select('id')
         .single()
       
       if (error) throw error
+      
+      if (!data || !data.id) {
+        throw new Error('Failed to create statement: No ID returned from database')
+      }
       
       toast({
         title: 'Success',
         description: 'Statement created successfully',
       })
       
-      return data
+      return data.id
     } catch (error) {
       console.error('Error creating statement:', error)
         toast({
