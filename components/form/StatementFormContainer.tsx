@@ -709,7 +709,7 @@ function generateInsights(params: any): string[] {
     insights.push("Please enter your income details to generate personalized insights.");
     return insights;
   }
-
+  
   // Profit analysis
   if (safeFinalNetIncome < 0) {
     insights.push("Your household is operating at a deficit. Focus on increasing revenue or reducing expenses to achieve profitability.");
@@ -734,13 +734,13 @@ function generateInsights(params: any): string[] {
       insights.push(`Your household profit margin is a healthy ${profitMargin}%. This gives you flexibility for future financial goals.`);
     }
   }
-
+  
   // Net revenue check
   if (safeNetRevenue <= 0) {
     insights.push("Your net revenue is zero or negative. Review your income and pre-tax deductions to ensure accuracy.");
     return insights;
   }
-
+  
   // 50/30/20 rule analysis
   const needsPercentage = safePercentage(safeNeedsActual, safeNetRevenue);
   const wantsPercentage = safePercentage(safeWantsActual, safeNetRevenue);
@@ -776,7 +776,7 @@ function generateInsights(params: any): string[] {
   } else if (wantsPercentage > 0) {
     insights.push(`Your discretionary spending is well-controlled at ${wantsPercentage}% of net income, within the recommended 30% limit.`);
   }
-
+  
   // Savings analysis
   if (savingsPercentage < 20 && savingsPercentage > 0) {
     insights.push(`Your savings rate is ${savingsPercentage}%, below the recommended 20%. Increasing this will strengthen your financial position.`);
@@ -793,7 +793,7 @@ function generateInsights(params: any): string[] {
   } else if (savingsPercentage >= 20) {
     insights.push(`Your savings rate of ${savingsPercentage}% exceeds the recommended 20%. You're effectively investing in future growth.`);
   }
-
+  
   // Debt analysis
   const safeDebtPayments = safeNumber(params.formData?.debtPayments);
   if (safeDebtPayments > 0) {
@@ -802,7 +802,7 @@ function generateInsights(params: any): string[] {
       insights.push(`Debt payments consume ${debtPercentage}% of your net income. Prioritizing debt reduction could increase your profit margin.`);
     }
   }
-
+  
   // Cost to Earn analysis
   if (params.costToEarn?.totalC2E > 0) {
     const c2ePercentage = safePercentage(safeNumber(params.costToEarn.totalC2E), safeNetRevenue);

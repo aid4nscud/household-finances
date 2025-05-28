@@ -117,13 +117,13 @@ async function StatementDetail({ params }: StatementDetailPageProps) {
         <div className="mb-12">
           <h2 className="text-xs font-medium tracking-wider text-gray-500 dark:text-gray-400 uppercase mb-4">Income</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            <SummaryItem
-              title="Gross Revenue"
-              value={incomeStatement.income.grossRevenue.formatted}
-              subtitle="Total household income"
-              type="income"
-            />
-            <SummaryItem
+          <SummaryItem
+            title="Gross Revenue"
+            value={incomeStatement.income.grossRevenue.formatted}
+            subtitle="Total household income"
+            type="income"
+          />
+          <SummaryItem
               title="Primary Income"
               value={incomeStatement.income.primaryIncome.formatted}
               subtitle="Main source of income"
@@ -142,8 +142,8 @@ async function StatementDetail({ params }: StatementDetailPageProps) {
                 title="Investment Income"
                 value={incomeStatement.income.investmentIncome.formatted}
                 subtitle="Returns on investments"
-                type="income"
-              />
+            type="income"
+          />
             )}
           </div>
         </div>
@@ -196,7 +196,7 @@ async function StatementDetail({ params }: StatementDetailPageProps) {
               value={incomeStatement.netRevenue.formatted}
               subtitle="After pre-tax deductions"
               type="income"
-            />
+              />
             {incomeStatement.costToEarn && incomeStatement.costToEarn.totalC2E.value > 0 && (
               <>
                 <SummaryItem
@@ -225,7 +225,7 @@ async function StatementDetail({ params }: StatementDetailPageProps) {
               value={incomeStatement.essentialNeeds.totalNeedsExpenses.formatted}
               subtitle={`${calculatePercentage(incomeStatement.essentialNeeds.totalNeedsExpenses.value, incomeStatement.netRevenue.value)}% of net revenue`}
               type="expense"
-            />
+                />
             <SummaryItem
               title="Housing & Utilities"
               value={formatCurrency(
@@ -235,7 +235,7 @@ async function StatementDetail({ params }: StatementDetailPageProps) {
               subtitle="Shelter costs"
               type="expense"
             />
-            <SummaryItem
+                <SummaryItem
               title="Food & Transportation"
               value={formatCurrency(
                 Number(incomeStatement.essentialNeeds.foodGroceries.value) +
@@ -271,7 +271,7 @@ async function StatementDetail({ params }: StatementDetailPageProps) {
               value={incomeStatement.savingsInvestments.shortTermSavings.formatted}
               subtitle="Emergency fund & goals"
               type="savings"
-            />
+                />
             <SummaryItem
               title="Long-term Investments"
               value={incomeStatement.savingsInvestments.longTermInvestments.formatted}
@@ -279,13 +279,13 @@ async function StatementDetail({ params }: StatementDetailPageProps) {
               type="savings"
             />
             {incomeStatement.savingsInvestments.retirementSavings.value > 0 && (
-              <SummaryItem
+                <SummaryItem
                 title="Additional Retirement"
                 value={incomeStatement.savingsInvestments.retirementSavings.formatted}
                 subtitle="Post-tax retirement"
                 type="savings"
-              />
-            )}
+                />
+              )}
           </div>
         </div>
 
@@ -293,12 +293,12 @@ async function StatementDetail({ params }: StatementDetailPageProps) {
         <div className="mb-12">
           <h2 className="text-xs font-medium tracking-wider text-gray-500 dark:text-gray-400 uppercase mb-4">Discretionary Expenses</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            <SummaryItem
+                <SummaryItem
               title="Total Wants"
               value={incomeStatement.discretionaryExpenses.totalWantsExpenses.formatted}
               subtitle={`${calculatePercentage(incomeStatement.discretionaryExpenses.totalWantsExpenses.value, incomeStatement.netRevenue.value)}% of net revenue`}
               type="expense"
-            />
+                />
             <SummaryItem
               title="Entertainment & Dining"
               value={formatCurrency(
@@ -308,7 +308,7 @@ async function StatementDetail({ params }: StatementDetailPageProps) {
               subtitle="Leisure activities"
               type="expense"
             />
-            <SummaryItem
+                <SummaryItem
               title="Shopping & Personal"
               value={formatCurrency(
                 Number(incomeStatement.discretionaryExpenses.shoppingPersonal.value) +
@@ -325,7 +325,7 @@ async function StatementDetail({ params }: StatementDetailPageProps) {
               )}
               subtitle="Lifestyle choices"
               type="expense"
-            />
+                />
           </div>
         </div>
 
@@ -342,16 +342,16 @@ async function StatementDetail({ params }: StatementDetailPageProps) {
               subtitle="Monthly set aside"
               type="expense"
             />
-            <SummaryItem
+          <SummaryItem
               title="Home & Vehicle"
               value={formatCurrency(
                 Number(incomeStatement.annualExpenses.homeRepairs.value) +
                 Number(incomeStatement.annualExpenses.vehicleMaintenance.value)
               )}
               subtitle="Maintenance fund"
-              type="expense"
-            />
-            <SummaryItem
+            type="expense"
+          />
+          <SummaryItem
               title="Celebrations"
               value={formatCurrency(
                 Number(incomeStatement.annualExpenses.holidayGifts.value) +
@@ -359,9 +359,9 @@ async function StatementDetail({ params }: StatementDetailPageProps) {
                 Number(incomeStatement.annualExpenses.familyEvents.value)
               )}
               subtitle="Special occasions"
-              type="expense"
-            />
-            <SummaryItem
+            type="expense"
+          />
+          <SummaryItem
               title="Professional Growth"
               value={formatCurrency(
                 Number(incomeStatement.annualExpenses.professionalDevelopment.value) +
@@ -388,13 +388,13 @@ async function StatementDetail({ params }: StatementDetailPageProps) {
               value={incomeStatement.netProfit.formatted}
               subtitle="After discretionary"
               type={incomeStatement.netProfit.value >= 0 ? "income" : "expense"}
-            />
-            <SummaryItem
-              title="Final Net Income"
-              value={incomeStatement.finalNetIncome.formatted}
-              subtitle="Your household profit"
-              type={incomeStatement.finalNetIncome.value >= 0 ? "income" : "expense"}
-            />
+          />
+          <SummaryItem
+            title="Final Net Income"
+            value={incomeStatement.finalNetIncome.formatted}
+            subtitle="Your household profit"
+            type={incomeStatement.finalNetIncome.value >= 0 ? "income" : "expense"}
+          />
           </div>
         </div>
 

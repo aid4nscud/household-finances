@@ -48,7 +48,7 @@ const SummaryItem: React.FC<SummaryItemProps> = ({
         <h3 className={`font-medium ${textColor}`}>{title}</h3>
         <p className="text-2xl font-semibold text-gray-900 dark:text-white">{value}</p>
         <p className="text-sm text-gray-500 dark:text-gray-400">{subtitle}</p>
-      </div>
+          </div>
       <div className={`${iconBg} p-3 rounded-xl`}>
         <Icon className={`h-5 w-5 ${textColor}`} aria-hidden="true" />
       </div>

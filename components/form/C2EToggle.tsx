@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Switch } from '@/components/ui/switch';
 import { Slider } from '@/components/ui/slider';
-import {
+import { 
   Popover,
   PopoverContent,
   PopoverTrigger,
@@ -21,15 +21,15 @@ const C2EToggle: React.FC<C2EToggleProps> = ({
   onChange
 }) => {
   const [isOpen, setIsOpen] = useState(false);
-
+  
   const handleToggleChange = (checked: boolean) => {
     onChange(checked, percentage);
   };
-
+  
   const handlePercentageChange = (value: number[]) => {
     onChange(isC2E, value[0]);
   };
-
+  
   return (
     <div className="flex items-center space-x-2">
       <Popover open={isOpen} onOpenChange={setIsOpen}>
@@ -52,17 +52,17 @@ const C2EToggle: React.FC<C2EToggleProps> = ({
           align="end"
         >
           <div className="space-y-4">
-            <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between">
               <label 
                 htmlFor={`${fieldId}-c2e-toggle`}
                 className="text-sm font-medium text-gray-700 dark:text-gray-300"
               >
                 Cost to Earn
               </label>
-              <Switch
+          <Switch
                 id={`${fieldId}-c2e-toggle`}
-                checked={isC2E}
-                onCheckedChange={handleToggleChange}
+            checked={isC2E}
+            onCheckedChange={handleToggleChange}
                 className={`
                   ${isC2E ? 'bg-[#00C805]' : 'bg-gray-200 dark:bg-gray-700'}
                   relative inline-flex h-6 w-11 items-center rounded-full transition-colors
@@ -70,8 +70,8 @@ const C2EToggle: React.FC<C2EToggleProps> = ({
                   dark:focus:ring-offset-gray-900
                 `}
               />
-            </div>
-            {isC2E && (
+        </div>
+        {isC2E && (
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-gray-500 dark:text-gray-400">
@@ -79,13 +79,13 @@ const C2EToggle: React.FC<C2EToggleProps> = ({
                   </span>
                   <span className="text-sm font-medium text-[#00C805]">
                     {percentage}%
-                  </span>
-                </div>
-                <Slider
+          </span>
+      </div>
+          <Slider
                   value={[percentage]}
                   min={0}
-                  max={100}
-                  step={5}
+            max={100}
+            step={5}
                   onValueChange={handlePercentageChange}
                   className="[&_[role=slider]]:bg-[#00C805] [&_[role=slider]]:border-[#00C805] [&_[role=slider]]:shadow-md"
                 />

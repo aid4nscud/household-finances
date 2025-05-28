@@ -44,27 +44,39 @@ export function useStatements() {
         }
       }
 
+      // Get the current session to get user_id
+      const { data: { session: currentSession } } = await supabase.auth.getSession()
+      if (!currentSession?.user) {
+        throw new Error('No authenticated user found')
+      }
+
+      // Structure the data correctly for the database schema
+      const dbRecord = {
+        user_id: currentSession.user.id,
+        statement_data: statementData
+      }
+
       const { data, error } = await supabase
         .from('income_statements')
-        .insert([statementData])
+        .insert([dbRecord])
         .select()
         .single()
-
+      
       if (error) throw error
-
+      
       toast({
         title: 'Success',
         description: 'Statement created successfully',
       })
-
+      
       return data
     } catch (error) {
       console.error('Error creating statement:', error)
-      toast({
+        toast({
         title: 'Error',
         description: error instanceof Error ? error.message : 'Failed to create statement',
         variant: 'destructive',
-      })
+        })
       throw error
     }
   }

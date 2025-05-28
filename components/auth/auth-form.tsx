@@ -62,10 +62,10 @@ export function AuthForm({ mode = 'signIn' }: AuthFormProps) {
       setIsLoading(true)
       setErrorMessage(null)
       setEmail(values.email)
-
+      
       const formData = new FormData()
       formData.append('email', values.email)
-
+      
       const result = mode === 'signIn' 
         ? await signInWithEmail(formData)
         : await signUp(formData)

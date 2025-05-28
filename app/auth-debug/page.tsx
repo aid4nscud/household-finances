@@ -122,11 +122,11 @@ export default function AuthDebugPage() {
       <div className="mb-8">
         <h2 className="text-xl font-semibold mb-2">Cookies</h2>
         <div className="bg-gray-100 rounded p-4 max-h-60 overflow-y-auto">
-          {cookies.map((cookie, i) => (
+                {cookies.map((cookie, i) => (
             <div key={i} className="py-1 border-b border-gray-200 last:border-0">
               <span className="font-mono text-sm">{cookie.name}</span>: {cookie.value}
             </div>
-          ))}
+                ))}
         </div>
       </div>
 
